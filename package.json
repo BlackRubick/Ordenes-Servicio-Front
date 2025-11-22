@@ -1,0 +1,32 @@
+{
+  "name": "sieeg-ordenes-servicio",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^2.9.10",
+    "axios": "^1.13.2",
+    "date-fns": "^2.30.0",
+    "dexie": "^3.2.4",
+    "jspdf": "^2.5.1",
+    "lucide-react": "^0.294.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-hook-form": "^7.48.0",
+    "react-router-dom": "^6.20.0",
+    "sonner": "^1.2.0",
+    "zod": "^3.22.0",
+    "zustand": "^4.4.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.0.0",
+    "autoprefixer": "^10.4.14",
+    "postcss": "^8.4.24",
+    "tailwindcss": "^3.4.8",
+    "vite": "^5.0.0"
+  }
+}
