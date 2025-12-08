@@ -209,7 +209,15 @@ export default function NuevaOrden() {
   const [tecnicos, setTecnicos] = useState([])
 
   useEffect(() => {
-    setTecnicos(findTechnicians())
+    async function loadTechs() {
+      try {
+        const list = await findTechnicians()
+        setTecnicos(list)
+      } catch (e) {
+        setTecnicos([])
+      }
+    }
+    loadTechs()
     if (user?.rol === 'tecnico') {
       setFormData(prev => ({ ...prev, tecnicoUid: user.uid, tecnicoNombre: user.nombre || user.email }))
     }
@@ -633,7 +641,7 @@ export default function NuevaOrden() {
                 value={formData.tecnicoUid}
                 onChange={(e) => {
                   const uid = e.target.value
-                  const t = findTechnicians().find(x => x.uid === uid)
+                  const t = tecnicos.find(x => x.uid === uid)
                   updateField('tecnicoUid', uid)
                   updateField('tecnicoNombre', t ? t.nombre : '')
                 }}

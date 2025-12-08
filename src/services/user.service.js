@@ -1,38 +1,35 @@
-// Simple user service backed by localStorage for managing users (tecnicos/admin)
-const USERS_KEY = 'sieeg_users'
+import { api } from './api'
 
-export function getUsers() {
-  try {
-    const raw = localStorage.getItem(USERS_KEY) || '[]'
-    return JSON.parse(raw)
-  } catch (e) {
-    return []
-  }
+export async function getUsers() {
+  const res = await api.get('/api/users')
+  return res.data || []
 }
 
-export function saveUsers(users) {
-  localStorage.setItem(USERS_KEY, JSON.stringify(users))
+export async function findUserByUid(uid) {
+  const res = await api.get(`/api/users/${uid}`)
+  return res.data
 }
 
-export function createUser({ uid, nombre, email, password, rol = 'tecnico', activo = true }) {
-  const users = getUsers()
-  // ensure uid unique
-  const newUid = uid || `${rol}_${Date.now().toString().slice(-6)}`
-  const user = { uid: newUid, nombre, email, password, rol, activo, createdAt: Date.now() }
-  users.push(user)
-  saveUsers(users)
-  return user
+export async function findTechnicians() {
+  const res = await api.get('/api/tecnicos')
+  return res.data || []
 }
 
-export function findUserByUid(uid) {
-  const users = getUsers()
-  return users.find(u => u.uid === uid) || null
+export async function createUser(payload) {
+  const res = await api.post('/api/tecnicos', payload)
+  return res.data
 }
 
-export function findTechnicians() {
-  return getUsers().filter(u => u.rol === 'tecnico' && u.activo)
+export async function deleteUser(uid) {
+  const res = await api.delete(`/api/users/${uid}`)
+  return res.data
+}
+
+export async function updateUser(uid, payload) {
+  const res = await api.put(`/api/users/${uid}`, payload)
+  return res.data
 }
 
 export default {
-  getUsers, saveUsers, createUser, findUserByUid, findTechnicians
+  getUsers, findUserByUid, findTechnicians, createUser, deleteUser, updateUser
 }

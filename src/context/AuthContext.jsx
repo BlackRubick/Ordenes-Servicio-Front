@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
-import { seedUsers } from '../data/seed'
+import { api } from '../services/api'
 
 const AuthContext = createContext(null)
 
@@ -8,20 +8,27 @@ export function AuthProvider({ children }) {
   const [initialized, setInitialized] = useState(false)
 
   useEffect(() => {
-    // seed users on first run
-    seedUsers()
     const s = localStorage.getItem('sieeg_session')
-    if (s) setUser(JSON.parse(s))
+    if (s) {
+      const parsed = JSON.parse(s)
+      setUser({ ...parsed, rol: parsed.rol || parsed.role })
+    }
     setInitialized(true)
   }, [])
 
-  function login(userData) {
-    localStorage.setItem('sieeg_session', JSON.stringify(userData))
-    setUser(userData)
+  async function login({ email, password }) {
+    const res = await api.post('/api/auth/login', { email, password })
+    const { token, user: userData } = res.data
+    const normalized = { ...userData, rol: userData.rol || userData.role }
+    localStorage.setItem('sieeg_session', JSON.stringify(normalized))
+    localStorage.setItem('sieeg_token', token)
+    setUser(normalized)
+    return normalized
   }
 
   function logout() {
     localStorage.removeItem('sieeg_session')
+    localStorage.removeItem('sieeg_token')
     setUser(null)
   }
 

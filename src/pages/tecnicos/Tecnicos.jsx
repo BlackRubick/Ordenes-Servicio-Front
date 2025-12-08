@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { createUser, getUsers, findTechnicians } from '../../services/user.service'
+import { createUser, getUsers, deleteUser, updateUser } from '../../services/user.service'
 import { Plus, Trash2, Edit2, Save, X, Users, Mail, Lock, Shield, UserCog } from 'lucide-react'
 
 export default function TecnicosPage() {
@@ -8,8 +8,14 @@ export default function TecnicosPage() {
   const [editingId, setEditingId] = useState(null)
   const [editForm, setEditForm] = useState({})
 
-  function load() {
-    setTecnicos(getUsers().filter(u => u.rol === 'tecnico' || u.rol === 'admin'))
+  async function load() {
+    try {
+      const list = await getUsers()
+      const normalized = (list || []).map(u => ({ ...u, rol: u.rol || u.role || 'tecnico' }))
+      setTecnicos(normalized.filter(u => u.rol === 'tecnico' || u.rol === 'admin'))
+    } catch (e) {
+      setTecnicos([])
+    }
   }
 
   useEffect(() => { load() }, [])
@@ -17,7 +23,7 @@ export default function TecnicosPage() {
   function updateField(k, v) { setForm(prev => ({ ...prev, [k]: v })) }
   function updateEditField(k, v) { setEditForm(prev => ({ ...prev, [k]: v })) }
 
-  function handleCreate(e) {
+  async function handleCreate(e) {
     e.preventDefault()
     if (!form.nombre || !form.email || !form.password) {
       alert('Nombre, correo y contraseña son requeridos')
@@ -31,15 +37,18 @@ export default function TecnicosPage() {
       return
     }
 
-    createUser({ 
-      nombre: form.nombre, 
-      email: form.email, 
-      password: form.password, 
-      rol: form.rol || 'tecnico' 
-    })
-    
-    setForm({ nombre: '', email: '', password: '', rol: 'tecnico' })
-    load()
+    try {
+      await createUser({ 
+        nombre: form.nombre, 
+        email: form.email, 
+        password: form.password, 
+        rol: form.rol || 'tecnico' 
+      })
+      setForm({ nombre: '', email: '', password: '', rol: 'tecnico' })
+      load()
+    } catch (err) {
+      alert('No se pudo crear el usuario')
+    }
   }
 
   function startEdit(tecnico) {
@@ -47,7 +56,8 @@ export default function TecnicosPage() {
     setEditForm({
       nombre: tecnico.nombre,
       email: tecnico.email,
-      rol: tecnico.rol
+      rol: tecnico.rol,
+      password: ''
     })
   }
 
@@ -56,29 +66,51 @@ export default function TecnicosPage() {
     setEditForm({})
   }
 
-  function saveEdit(uid) {
+  async function saveEdit(uid) {
     if (!editForm.nombre || !editForm.email) {
       alert('Nombre y correo son requeridos')
       return
     }
 
-    const users = getUsers()
-    const index = users.findIndex(u => u.uid === uid)
-    if (index !== -1) {
-      users[index] = { ...users[index], ...editForm }
-      localStorage.setItem('sieeg_users', JSON.stringify(users))
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(editForm.email)) {
+      alert('Por favor ingresa un correo válido')
+      return
+    }
+
+    const payload = {
+      nombre: editForm.nombre,
+      email: editForm.email,
+      rol: editForm.rol || 'tecnico'
+    }
+
+    if (editForm.password && editForm.password.length < 6) {
+      alert('La contraseña debe tener al menos 6 caracteres')
+      return
+    }
+
+    if (editForm.password) {
+      payload.password = editForm.password
+    }
+
+    try {
+      await updateUser(uid, payload)
       setEditingId(null)
       setEditForm({})
-      load()
+      await load()
+    } catch (err) {
+      alert('No se pudo actualizar el usuario')
     }
   }
 
-  function handleDelete(uid) {
-    if (!confirm('¿Estás seguro de eliminar este usuario?')) return
-    
-    const users = getUsers().filter(u => u.uid !== uid)
-    localStorage.setItem('sieeg_users', JSON.stringify(users))
-    load()
+  async function handleDelete(uid) {
+    if (!confirm('¿Eliminar este usuario?')) return
+    try {
+      await deleteUser(uid)
+      load()
+    } catch (e) {
+      alert('No se pudo eliminar')
+    }
   }
 
   const getRolBadge = (rol) => {
@@ -192,8 +224,8 @@ export default function TecnicosPage() {
           </form>
         </div>
 
-        {/* Lista de usuarios */}
-        <div className="bg-white rounded-2xl shadow-xl p-6 border-l-4 border-[#0078ff]">
+        {/* Listado */}
+        <div className="bg-white rounded-2xl shadow-xl p-6 border-t-4 border-[#0078ff]">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
               <Users className="w-6 h-6 text-[#0078ff]" />
@@ -222,7 +254,7 @@ export default function TecnicosPage() {
                   {editingId === t.uid ? (
                     // Modo edición
                     <div className="space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                         <div>
                           <label className="text-xs font-bold text-gray-600 mb-1 block">Nombre</label>
                           <input
@@ -250,6 +282,16 @@ export default function TecnicosPage() {
                             <option value="tecnico">Técnico</option>
                             <option value="admin">Administrador</option>
                           </select>
+                        </div>
+                        <div>
+                          <label className="text-xs font-bold text-gray-600 mb-1 block">Contraseña (opcional)</label>
+                          <input
+                            type="password"
+                            value={editForm.password || ''}
+                            onChange={(e) => updateEditField('password', e.target.value)}
+                            className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-[#0078ff] focus:ring-2 focus:ring-blue-200"
+                            placeholder="Dejar en blanco para mantener"
+                          />
                         </div>
                       </div>
                       <div className="flex flex-col sm:flex-row gap-2 justify-end">

@@ -1,22 +1,6 @@
 import React, { useState } from 'react'
 import { Search, FileText, Clock, User, AlertCircle, CheckCircle2, Package, Wrench, Calendar } from 'lucide-react'
-
-// Mock service
-const storageService = {
-  getOrdenes: async () => [
-    { 
-      id: '1', 
-      folio: 'S2501104', 
-      cliente: { nombre: 'Alberto Molina', telefono: '9621897887' }, 
-      equipo: { tipo: 'Laptop', marca: 'HP' }, 
-      estado: 'En reparación', 
-      fechaIngreso: '2025-11-08',
-      descripcionFalla: 'No enciende, posible problema con la fuente de poder',
-      tecnicoAsignado: 'Ing. Carlos Méndez',
-      createdAt: Date.now()
-    }
-  ]
-}
+import { getOrdenByFolioPublic } from '../../services/consulta.service'
 
 function getEstadoIcon(estado) {
   const icons = {
@@ -107,20 +91,16 @@ export default function ConsultaPublica() {
     setNotFound(false)
     setOrden(null)
 
-    // Simular delay de búsqueda
-    setTimeout(async () => {
-      const all = await storageService.getOrdenes()
-      const found = all.find(o => String(o.folio).toLowerCase() === folio.toLowerCase().trim())
-      
-      if (found) {
-        setOrden(found)
-        setNotFound(false)
-      } else {
-        setOrden(null)
-        setNotFound(true)
-      }
+    try {
+      const found = await getOrdenByFolioPublic(folio.trim())
+      setOrden(found)
+      setNotFound(false)
+    } catch (e) {
+      setOrden(null)
+      setNotFound(true)
+    } finally {
       setSearching(false)
-    }, 500)
+    }
   }
 
   return (
@@ -231,7 +211,7 @@ export default function ConsultaPublica() {
                     <div>
                       <p className="text-xs text-gray-500 font-bold uppercase tracking-wide">Técnico Asignado</p>
                       <p className="text-gray-800 font-bold text-lg mt-1">
-                        {orden.tecnicoAsignado || 'No asignado aún'}
+                        {orden.tecnicoNombre || 'No asignado aún'}
                       </p>
                     </div>
                   </div>

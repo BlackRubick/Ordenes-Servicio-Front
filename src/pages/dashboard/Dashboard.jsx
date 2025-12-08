@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { 
   LayoutDashboard, 
   FileText, 
@@ -13,19 +14,7 @@ import {
   ArrowRight,
   Activity
 } from 'lucide-react'
-
-// Mock service
-const storageService = {
-  getOrdenes: async () => [
-    { id: '1', folio: 'S2501104', cliente: { nombre: 'Alberto Molina' }, equipo: { tipo: 'Laptop', marca: 'HP' }, estado: 'Pendiente', fechaIngreso: '2025-11-14', createdAt: Date.now() },
-    { id: '2', folio: 'S2501105', cliente: { nombre: 'María García' }, equipo: { tipo: 'Celular', marca: 'Samsung' }, estado: 'En revisión', fechaIngreso: '2025-11-14', createdAt: Date.now() - 3600000 },
-    { id: '3', folio: 'S2501106', cliente: { nombre: 'Juan Pérez' }, equipo: { tipo: 'Tablet', marca: 'Apple' }, estado: 'En reparación', fechaIngreso: '2025-11-13', createdAt: Date.now() - 86400000 },
-    { id: '4', folio: 'S2501107', cliente: { nombre: 'Ana López' }, equipo: { tipo: 'Laptop', marca: 'Dell' }, estado: 'En reparación', fechaIngreso: '2025-11-13', createdAt: Date.now() - 86400000 },
-    { id: '5', folio: 'S2501108', cliente: { nombre: 'Carlos Ruiz' }, equipo: { tipo: 'Celular', marca: 'iPhone' }, estado: 'Listo', fechaIngreso: '2025-11-12', createdAt: Date.now() - 172800000 },
-    { id: '6', folio: 'S2501109', cliente: { nombre: 'Pedro Sánchez' }, equipo: { tipo: 'Laptop', marca: 'Lenovo' }, estado: 'Listo', fechaIngreso: '2025-11-14', createdAt: Date.now() - 7200000 },
-    { id: '7', folio: 'S2501110', cliente: { nombre: 'Laura Martínez' }, equipo: { tipo: 'Tablet', marca: 'Samsung' }, estado: 'Entregado', fechaIngreso: '2025-11-10', createdAt: Date.now() - 345600000 },
-  ]
-}
+import { storageService } from '../../services/storage.service'
 
 function StatCard({ title, value, icon: Icon, color, trend, description }) {
   return (
@@ -76,6 +65,7 @@ function getEstadoBadge(estado) {
 }
 
 export default function Dashboard() {
+  const navigate = useNavigate()
   const [stats, setStats] = useState({
     hoy: 0,
     pendientes: 0,
@@ -215,7 +205,7 @@ export default function Dashboard() {
                   Órdenes Recientes
                 </h2>
               </div>
-              <button className="flex items-center gap-1 text-sky-600 text-sm font-bold hover:gap-2 transition-all group">
+              <button onClick={() => navigate('/ordenes')} className="flex items-center gap-1 text-sky-600 text-sm font-bold hover:gap-2 transition-all group">
                 Ver todas
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </button>

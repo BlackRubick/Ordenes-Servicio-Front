@@ -154,7 +154,7 @@ export default function OrdenDetalle() {
     }
   }
 
-  // Search products helper (debounced per index)
+  // Search products helper (debounced per index) - Direct WooCommerce
   function searchProductsForIndex(index, term) {
     if (!term || String(term).trim().length < 2) {
       setProductSuggestions(prev => ({ ...prev, [index]: [] }))
@@ -167,10 +167,38 @@ export default function OrdenDetalle() {
     setProductLoading(prev => ({ ...prev, [index]: true }))
     searchTimers.current[index] = setTimeout(async () => {
       try {
-        const results = await getProducts({ baseUrl: WOOCOMMERCE_URL, key: WOOCOMMERCE_CONSUMER_KEY, secret: WOOCOMMERCE_CONSUMER_SECRET, params: { search: term, per_page: 10 } })
+        const WC_URL = import.meta.env.VITE_WC_URL || 'https://sieeg.com.mx'
+        const WC_KEY = import.meta.env.VITE_WC_KEY || ''
+        const WC_SECRET = import.meta.env.VITE_WC_SECRET || ''
+
+        if (!WC_KEY || !WC_SECRET) {
+          console.warn('WooCommerce credentials not configured. Add VITE_WC_KEY and VITE_WC_SECRET to .env.local')
+          setProductSuggestions(prev => ({ ...prev, [index]: [] }))
+          setProductLoading(prev => ({ ...prev, [index]: false }))
+          return
+        }
+
+        const url = new URL(`${WC_URL}/wp-json/wc/v3/products`)
+        url.searchParams.append('consumer_key', WC_KEY)
+        url.searchParams.append('consumer_secret', WC_SECRET)
+        url.searchParams.append('search', term)
+        url.searchParams.append('per_page', '10')
+
+        const res = await fetch(url.toString(), {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
+
+        if (!res.ok) {
+          throw new Error(`WooCommerce error: ${res.status}`)
+        }
+
+        const results = await res.json()
         setProductSuggestions(prev => ({ ...prev, [index]: results || [] }))
       } catch (e) {
-        console.warn('Error buscando productos', e)
+        console.warn('Error buscando productos en WooCommerce:', e)
         setProductSuggestions(prev => ({ ...prev, [index]: [] }))
       } finally {
         setProductLoading(prev => ({ ...prev, [index]: false }))

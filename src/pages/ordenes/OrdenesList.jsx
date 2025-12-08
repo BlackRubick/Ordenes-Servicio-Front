@@ -10,7 +10,8 @@ function getEstadoBadge(estado) {
     'En revisión': 'bg-amber-100 text-amber-700 border-amber-300',
     'En reparación': 'bg-sky-100 text-sky-700 border-sky-300',
     'Listo': 'bg-emerald-100 text-emerald-700 border-emerald-300',
-    'Entregado': 'bg-gray-100 text-gray-600 border-gray-300'
+    'Entregado': 'bg-emerald-100 text-emerald-700 border-emerald-300',
+    'Cancelado': 'bg-red-100 text-red-700 border-red-300'
   }
   
   return (
@@ -18,6 +19,18 @@ function getEstadoBadge(estado) {
       {estado}
     </span>
   )
+}
+
+function getEstadoSelectClass(estado) {
+  const styles = {
+    'Pendiente': 'bg-gray-50 border-gray-300 text-gray-700',
+    'En revisión': 'bg-amber-50 border-amber-300 text-amber-700',
+    'En reparación': 'bg-sky-50 border-sky-300 text-sky-700',
+    'Listo': 'bg-emerald-50 border-emerald-300 text-emerald-700',
+    'Entregado': 'bg-emerald-50 border-emerald-300 text-emerald-700',
+    'Cancelado': 'bg-red-50 border-red-300 text-red-700'
+  }
+  return styles[estado] || styles['Pendiente']
 }
 
 function StatCard({ label, count, estado, isActive, onClick, icon: Icon }) {
@@ -60,6 +73,16 @@ export default function OrdenesList() {
     const all = await storageService.getOrdenes()
     setOrdenes(all.reverse())
     setFilteredOrdenes(all.reverse())
+  }
+
+  async function cambiarEstado(ordenId, nuevoEstado) {
+    try {
+      await storageService.updateOrden(ordenId, { estado: nuevoEstado })
+      load()
+    } catch (err) {
+      alert('Error al actualizar el estado')
+      console.error(err)
+    }
   }
 
   useEffect(() => { load() }, [])
@@ -273,7 +296,18 @@ export default function OrdenesList() {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {getEstadoBadge(o.estado)}
+                        <select
+                          value={o.estado}
+                          onChange={(e) => cambiarEstado(o.id, e.target.value)}
+                          className={`px-3 py-2 rounded-lg text-xs font-bold border-2 focus:ring-2 focus:ring-offset-1 cursor-pointer transition-all ${getEstadoSelectClass(o.estado)}`}
+                        >
+                          <option value="Pendiente">Pendiente</option>
+                          <option value="En revisión">En revisión</option>
+                          <option value="En reparación">En reparación</option>
+                          <option value="Listo">Listo</option>
+                          <option value="Entregado">Entregado</option>
+                          <option value="Cancelado">Cancelado</option>
+                        </select>
                       </td>
                       <td className="px-6 py-4">
                         <div className="text-sm font-medium text-gray-700">

@@ -5,9 +5,7 @@ import { Mail, Lock, Eye, EyeOff, AlertCircle } from 'lucide-react'
 
 function LoginPage() {
   const navigate = useNavigate()
-  const { login } = useAuth()
-
-  const { user, initialized } = useAuth()
+  const { login, user, initialized } = useAuth()
   
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -28,22 +26,14 @@ function LoginPage() {
       return
     }
 
-    setIsLoading(true)
-
-    // Simular delay de red
-    setTimeout(() => {
-      const users = JSON.parse(localStorage.getItem('sieeg_users') || '[]')
-      const u = users.find(x => x.email === formData.email && x.password === formData.password)
-      
-      if (!u) {
-        setError('Credenciales inválidas. Verifica tu email y contraseña.')
-        setIsLoading(false)
-        return
-      }
-      
-      login({ uid: u.uid, email: u.email, nombre: u.nombre, rol: u.rol })
+    try {
+      setIsLoading(true)
+      await login({ email: formData.email, password: formData.password })
       navigate('/dashboard')
-    }, 800)
+    } catch (e) {
+      setError(e?.response?.data?.message || 'Credenciales inválidas')
+      setIsLoading(false)
+    }
   }
 
   // If already authenticated, redirect away from /login
