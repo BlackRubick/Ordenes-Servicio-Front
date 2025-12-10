@@ -9,56 +9,54 @@ import {
   Package,
   TrendingUp,
   Calendar,
-  AlertCircle,
   Users,
   ArrowRight,
   Activity,
-  XCircle
+  XCircle,
+  ChevronRight
 } from 'lucide-react'
 import { storageService } from '../../services/storage.service'
 
-function StatCard({ title, value, icon: Icon, color, trend, description }) {
+function MetricCard({ title, value, icon: Icon, color, trend, description, bgColor }) {
   return (
-    <div className={`relative overflow-hidden bg-white rounded-xl shadow-md hover:shadow-xl p-5 sm:p-6 transition-all duration-300 group border-t-4 ${color}`}>
-      <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-sky-50 to-transparent opacity-40 rounded-full -mr-12 -mt-12"></div>
+    <div className="bg-white border border-gray-200 rounded-lg p-5 hover:shadow-lg transition-shadow">
+      <div className="flex items-start justify-between mb-4">
+        <div className={`p-3 rounded-lg ${bgColor}`}>
+          <Icon className={`w-5 h-5 ${color}`} strokeWidth={2} />
+        </div>
+        {trend && (
+          <span className="text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded">
+            {trend}
+          </span>
+        )}
+      </div>
       
-      <div className="relative z-10">
-        <div className="flex items-start justify-between mb-5">
-          <div className="p-2.5 rounded-lg bg-gradient-to-br from-sky-50 to-sky-100">
-            <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-sky-600" strokeWidth={2} />
-          </div>
-          {trend && (
-            <div className="flex items-center gap-1 px-2.5 py-1 bg-emerald-50 rounded-md border border-emerald-200">
-              <TrendingUp className="w-3.5 h-3.5 text-emerald-600" strokeWidth={2.5} />
-              <span className="text-emerald-700 text-xs font-semibold">{trend}</span>
-            </div>
-          )}
-        </div>
-        
-        <div className="space-y-1.5">
-          <p className="text-xs uppercase font-semibold text-gray-500 tracking-wider">{title}</p>
-          <p className="text-3xl sm:text-4xl font-bold text-gray-900 tabular-nums">{value}</p>
-          {description && (
-            <p className="text-xs text-gray-500 font-medium pt-1">{description}</p>
-          )}
-        </div>
+      <div className="space-y-1">
+        <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wide">{title}</h3>
+        <p className="text-3xl font-semibold text-gray-900 tabular-nums">{value}</p>
+        {description && (
+          <p className="text-xs text-gray-500 mt-1">{description}</p>
+        )}
       </div>
     </div>
   )
 }
 
-function getEstadoBadge(estado) {
-  const styles = {
-    'Pendiente': 'bg-gray-50 text-gray-700 border-gray-200',
-    'En revisión': 'bg-amber-50 text-amber-700 border-amber-200',
-    'En reparación': 'bg-sky-50 text-sky-700 border-sky-200',
-    'Listo': 'bg-emerald-50 text-emerald-700 border-emerald-200',
-    'Entregado': 'bg-gray-50 text-gray-600 border-gray-200',
-    'Cancelado': 'bg-red-50 text-red-700 border-red-200'
+function StatusBadge({ estado }) {
+  const config = {
+    'Pendiente': { bg: 'bg-gray-100', text: 'text-gray-700', dot: 'bg-gray-400' },
+    'En revisión': { bg: 'bg-amber-100', text: 'text-amber-700', dot: 'bg-amber-500' },
+    'En reparación': { bg: 'bg-sky-100', text: 'text-sky-700', dot: 'bg-sky-500' },
+    'Listo': { bg: 'bg-emerald-100', text: 'text-emerald-700', dot: 'bg-emerald-500' },
+    'Entregado': { bg: 'bg-gray-100', text: 'text-gray-600', dot: 'bg-gray-400' },
+    'Cancelado': { bg: 'bg-red-100', text: 'text-red-700', dot: 'bg-red-500' }
   }
   
+  const style = config[estado] || config['Pendiente']
+  
   return (
-    <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold border ${styles[estado] || styles['Pendiente']} whitespace-nowrap`}>
+    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium ${style.bg} ${style.text}`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${style.dot}`}></span>
       {estado}
     </span>
   )
@@ -107,164 +105,196 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-cyan-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="relative inline-block">
-            <div className="w-14 h-14 border-3 border-sky-200 border-t-sky-600 rounded-full animate-spin"></div>
-            <Activity className="w-5 h-5 text-sky-600 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" strokeWidth={2} />
-          </div>
-          <p className="text-sm text-gray-700 font-medium mt-4">Cargando datos...</p>
+          <div className="w-12 h-12 border-3 border-gray-200 border-t-sky-600 rounded-full animate-spin mx-auto mb-3"></div>
+          <p className="text-sm text-gray-600 font-medium">Cargando información...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-cyan-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10">
-        
-        {/* Header Refinado */}
-        <div className="mb-8 sm:mb-12">
-          <div className="flex items-center gap-4 mb-2">
-            <div className="p-3 bg-gradient-to-br from-sky-500 to-cyan-500 rounded-lg shadow-md">
-              <LayoutDashboard className="w-6 h-6 text-white" strokeWidth={2} />
-            </div>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header Superior */}
+      <div className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 tracking-tight">Dashboard</h1>
-              <p className="text-sm text-gray-600 mt-0.5">Monitoreo en tiempo real del sistema</p>
+              <div className="flex items-center gap-3 mb-1">
+                <div className="w-10 h-10 bg-gradient-to-br from-sky-500 to-cyan-600 rounded-lg flex items-center justify-center">
+                  <LayoutDashboard className="w-5 h-5 text-white" strokeWidth={2} />
+                </div>
+                <h1 className="text-2xl font-semibold text-gray-900">Panel de Control</h1>
+              </div>
+              <p className="text-sm text-gray-500 ml-13">Sistema de gestión de órdenes de servicio</p>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <Calendar className="w-4 h-4" />
+              <span className="font-medium">{new Date().toLocaleDateString('es-MX', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Stats Grid Principal */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 mb-6">
-          <StatCard
-            title="Órdenes Hoy"
-            value={stats.hoy}
-            icon={Calendar}
-            color="border-sky-500"
-            description="Ingresadas hoy"
-          />
-          <StatCard
-            title="Pendientes"
-            value={stats.pendientes}
-            icon={Clock}
-            color="border-gray-400"
-            description="Esperando inicio"
-          />
-          <StatCard
-            title="En Reparación"
-            value={stats.enReparacion}
-            icon={Wrench}
-            color="border-cyan-500"
-            description="Proceso activo"
-          />
-          <StatCard
-            title="Listas"
-            value={stats.listos}
-            icon={CheckCircle2}
-            color="border-emerald-500"
-            description="Para entregar"
-          />
-        </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        
+        {/* Métricas Principales */}
+        <section className="mb-8">
+          <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-4">Resumen General</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <MetricCard
+              title="Ingresos Hoy"
+              value={stats.hoy}
+              icon={Calendar}
+              color="text-sky-600"
+              bgColor="bg-sky-50"
+              description="Órdenes del día actual"
+            />
+            <MetricCard
+              title="Pendientes"
+              value={stats.pendientes}
+              icon={Clock}
+              color="text-gray-600"
+              bgColor="bg-gray-50"
+              description="Esperando asignación"
+            />
+            <MetricCard
+              title="En Proceso"
+              value={stats.enReparacion}
+              icon={Wrench}
+              color="text-cyan-600"
+              bgColor="bg-cyan-50"
+              description="Reparaciones activas"
+            />
+            <MetricCard
+              title="Completadas"
+              value={stats.listos}
+              icon={CheckCircle2}
+              color="text-emerald-600"
+              bgColor="bg-emerald-50"
+              description="Listas para entrega"
+            />
+          </div>
+        </section>
 
-        {/* Stats Grid Secundario */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 mb-8 sm:mb-10">
-          <StatCard
-            title="En Revisión"
-            value={stats.enRevision}
-            icon={FileText}
-            color="border-amber-500"
-            description="Diagnóstico"
-          />
-          <StatCard
-            title="Entregadas"
-            value={stats.entregados}
-            icon={Package}
-            color="border-gray-500"
-            description="Completadas"
-          />
-          <StatCard
-            title="Canceladas"
-            value={stats.canceladas}
-            icon={XCircle}
-            color="border-red-500"
-            description="No completadas"
-          />
-          <StatCard
-            title="Total"
-            value={stats.total}
-            icon={Users}
-            color="border-sky-600"
-            trend="+12%"
-            description="Todas las órdenes"
-          />
-        </div>
+        {/* Métricas Secundarias */}
+        <section className="mb-8">
+          <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-4">Estadísticas Operativas</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <MetricCard
+              title="En Revisión"
+              value={stats.enRevision}
+              icon={FileText}
+              color="text-amber-600"
+              bgColor="bg-amber-50"
+              description="Diagnóstico técnico"
+            />
+            <MetricCard
+              title="Entregadas"
+              value={stats.entregados}
+              icon={Package}
+              color="text-gray-600"
+              bgColor="bg-gray-50"
+              description="Servicios finalizados"
+            />
+            <MetricCard
+              title="Canceladas"
+              value={stats.canceladas}
+              icon={XCircle}
+              color="text-red-600"
+              bgColor="bg-red-50"
+              description="Órdenes canceladas"
+            />
+            <MetricCard
+              title="Total General"
+              value={stats.total}
+              icon={Users}
+              color="text-sky-600"
+              bgColor="bg-sky-50"
+              trend="+12%"
+              description="Todas las órdenes"
+            />
+          </div>
+        </section>
 
-        {/* Sección de Órdenes Recientes */}
-        <div className="grid grid-cols-1 gap-5 sm:gap-6">
-          
-          <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
-            <div className="px-5 sm:px-6 py-5 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white">
+        {/* Tabla de Órdenes Recientes */}
+        <section>
+          <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-gradient-to-br from-sky-500 to-cyan-500 rounded-lg">
-                    <FileText className="w-5 h-5 text-white" strokeWidth={2} />
-                  </div>
-                  <div>
-                    <h2 className="text-lg sm:text-xl font-bold text-gray-900">
-                      Órdenes Recientes
-                    </h2>
-                    <p className="text-xs text-gray-500 mt-0.5">Últimas 5 órdenes registradas</p>
-                  </div>
+                <div>
+                  <h2 className="text-base font-semibold text-gray-900">Órdenes Recientes</h2>
+                  <p className="text-sm text-gray-500 mt-0.5">Últimas 5 órdenes registradas en el sistema</p>
                 </div>
-                <button 
-                  onClick={() => navigate('/ordenes')} 
-                  className="flex items-center justify-center gap-1.5 px-4 py-2 text-sky-600 text-sm font-semibold hover:bg-sky-50 rounded-lg transition-colors group"
+                <button
+                  onClick={() => navigate('/ordenes')}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-sky-600 text-white text-sm font-medium rounded-lg hover:bg-sky-700 transition-colors"
                 >
-                  Ver todas
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" strokeWidth={2} />
+                  Ver todas las órdenes
+                  <ArrowRight className="w-4 h-4" strokeWidth={2} />
                 </button>
               </div>
             </div>
-            
-            <div className="p-5 sm:p-6">
-              {recentOrders.length === 0 ? (
-                <div className="text-center py-16">
-                  <div className="w-16 h-16 bg-sky-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <FileText className="w-8 h-8 text-sky-400" strokeWidth={1.5} />
-                  </div>
-                  <p className="text-gray-500 font-medium text-sm">No hay órdenes registradas</p>
-                  <p className="text-gray-400 text-xs mt-1">Las órdenes aparecerán aquí</p>
+
+            {recentOrders.length === 0 ? (
+              <div className="px-6 py-16 text-center">
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <FileText className="w-8 h-8 text-gray-400" strokeWidth={1.5} />
                 </div>
-              ) : (
-                <div className="space-y-3">
-                  {recentOrders.map(orden => (
-                    <div 
-                      key={orden.id} 
-                      className="group flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-gray-50 border border-gray-200 rounded-lg hover:bg-sky-50 hover:border-sky-300 transition-all cursor-pointer"
-                    >
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2.5 mb-2 flex-wrap">
-                          <span className="font-mono text-sm font-bold text-sky-700 px-2 py-0.5 bg-sky-100 rounded">{orden.folio}</span>
-                          {getEstadoBadge(orden.estado)}
-                        </div>
-                        <p className="text-sm font-semibold text-gray-800 mb-1 truncate">{orden.cliente?.nombre}</p>
-                        <p className="text-xs text-gray-600 truncate">{orden.equipo?.tipo} - {orden.equipo?.marca}</p>
-                      </div>
-                      <div className="flex-shrink-0">
-                        <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-200 rounded-lg">
-                          <Calendar className="w-3.5 h-3.5 text-gray-500" strokeWidth={2} />
-                          <p className="text-xs font-medium text-gray-700 tabular-nums">{orden.fechaIngreso}</p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+                <h3 className="text-sm font-medium text-gray-900 mb-1">No hay órdenes registradas</h3>
+                <p className="text-sm text-gray-500">Las nuevas órdenes aparecerán aquí</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Folio</th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Cliente</th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider hidden md:table-cell">Equipo</th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Estado</th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider hidden sm:table-cell">Fecha</th>
+                      <th className="px-6 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">Acción</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {recentOrders.map(orden => (
+                      <tr key={orden.id} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className="text-sm font-mono font-semibold text-sky-700 bg-sky-50 px-2 py-1 rounded">
+                            {orden.folio}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-sm font-medium text-gray-900">{orden.cliente?.nombre}</div>
+                        </td>
+                        <td className="px-6 py-4 hidden md:table-cell">
+                          <div className="text-sm text-gray-600">{orden.equipo?.tipo}</div>
+                          <div className="text-xs text-gray-500">{orden.equipo?.marca}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <StatusBadge estado={orden.estado} />
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap hidden sm:table-cell">
+                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <Calendar className="w-3.5 h-3.5 text-gray-400" />
+                            <span className="tabular-nums">{orden.fechaIngreso}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right">
+                          <button className="text-sky-600 hover:text-sky-700 transition-colors">
+                            <ChevronRight className="w-5 h-5" strokeWidth={2} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
-        </div>
+        </section>
       </div>
 
       <style>{`
