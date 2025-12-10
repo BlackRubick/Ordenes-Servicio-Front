@@ -255,12 +255,15 @@ export default function Dashboard() {
                       <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider hidden md:table-cell">Equipo</th>
                       <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Estado</th>
                       <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider hidden sm:table-cell">Fecha</th>
-                      <th className="px-6 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">Acción</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {recentOrders.map(orden => (
-                      <tr key={orden.id} className="hover:bg-gray-50 transition-colors">
+                      <tr
+                        key={orden.id}
+                        className="hover:bg-gray-50 transition-colors cursor-pointer"
+                        onClick={() => navigate(`/ordenes/${orden.id}`)}
+                      >
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className="text-sm font-mono font-semibold text-sky-700 bg-sky-50 px-2 py-1 rounded">
                             {orden.folio}
@@ -281,11 +284,6 @@ export default function Dashboard() {
                             <Calendar className="w-3.5 h-3.5 text-gray-400" />
                             <span className="tabular-nums">{orden.fechaIngreso}</span>
                           </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right">
-                          <button className="text-sky-600 hover:text-sky-700 transition-colors">
-                            <ChevronRight className="w-5 h-5" strokeWidth={2} />
-                          </button>
                         </td>
                       </tr>
                     ))}
