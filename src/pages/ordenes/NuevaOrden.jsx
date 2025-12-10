@@ -389,13 +389,16 @@ export default function NuevaOrden() {
 
     const created = await storageService.createOrden(orden)
     try {
-      await downloadOrdenPDF(created)
+      // Esperar un poco para que la orden se registre antes de imprimir
+      setTimeout(() => {
+        window.print()
+      }, 500)
     } catch (err) {
-      console.warn('Error generating PDF on create', err)
+      console.warn('Error printing on create', err)
     }
 
     localStorage.removeItem(draftKey)
-    alert('Orden creada exitosamente')
+    alert('Orden creada exitosamente. Se abrirá el diálogo de impresión.')
     // navigate to the order detail so assigned technician (or admin) can add technician signature
     try {
       navigate(`/ordenes/${created.id}`)

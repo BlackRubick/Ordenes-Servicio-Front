@@ -216,6 +216,7 @@ export default function OrdenesList() {
   const [estadoFiltro, setEstadoFiltro] = useState('Todos')
   const [modalCancelacion, setModalCancelacion] = useState({ isOpen: false, ordenId: null, ordenFolio: null })
   const [modalEntrega, setModalEntrega] = useState({ isOpen: false, ordenId: null, ordenFolio: null })
+  const [modalConfirmacionCancelacion, setModalConfirmacionCancelacion] = useState({ isOpen: false, motivo: '', ordenFolio: null })
   const navigate = useNavigate()
   const { user } = useAuth()
 
@@ -235,7 +236,7 @@ export default function OrdenesList() {
     }
   }
 
-  async function cancelarOrden(ordenId, motivo) {
+  async function cancelarOrden(ordenId, motivo, ordenFolio) {
     try {
       await storageService.updateOrden(ordenId, { 
         estado: 'Cancelado',
@@ -243,6 +244,7 @@ export default function OrdenesList() {
         fechaCancelacion: new Date().toLocaleDateString('es-ES')
       })
       setModalCancelacion({ isOpen: false, ordenId: null, ordenFolio: null })
+      setModalConfirmacionCancelacion({ isOpen: true, motivo, ordenFolio })
       load()
     } catch (err) {
       alert('Error al cancelar la orden')
@@ -586,7 +588,7 @@ export default function OrdenesList() {
       <ModalCancelacion
         isOpen={modalCancelacion.isOpen}
         onClose={cerrarModalCancelacion}
-        onConfirm={(motivo) => cancelarOrden(modalCancelacion.ordenId, motivo)}
+        onConfirm={(motivo) => cancelarOrden(modalCancelacion.ordenId, motivo, modalCancelacion.ordenFolio)}
         ordenFolio={modalCancelacion.ordenFolio}
       />
 
@@ -597,6 +599,51 @@ export default function OrdenesList() {
         onConfirm={(datos) => entregarOrden(modalEntrega.ordenId, datos)}
         ordenFolio={modalEntrega.ordenFolio}
       />
+      {/* Modal de Confirmación de Cancelación */}
+      {modalConfirmacionCancelacion.isOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden animate-in">
+            <div className="bg-gradient-to-r from-red-500 to-red-600 px-6 py-4 flex items-center gap-3">
+              <AlertCircle className="w-6 h-6 text-white" />
+              <h2 className="text-xl font-bold text-white">Orden Cancelada</h2>
+            </div>
+
+            <div className="p-6">
+              <p className="text-gray-700 font-semibold mb-4">Orden: <span className="text-red-600 font-mono">{modalConfirmacionCancelacion.ordenFolio}</span></p>
+              
+              <div className="bg-red-50 border-2 border-red-200 rounded-lg p-4 mb-4">
+                <p className="text-sm font-semibold text-red-900 mb-2">Motivo de cancelación:</p>
+                <p className="text-red-800 text-sm whitespace-pre-wrap">{modalConfirmacionCancelacion.motivo}</p>
+              </div>
+
+              <p className="text-gray-600 text-sm">
+                La orden ha sido cancelada correctamente. ¿Deseas imprimir el comprobante de cancelación?
+              </p>
+            </div>
+
+            <div className="bg-gray-50 px-6 py-4 flex gap-3 justify-end border-t-2 border-gray-100">
+              <button
+                onClick={() => setModalConfirmacionCancelacion({ isOpen: false, motivo: '', ordenFolio: null })}
+                className="px-4 py-2 rounded-lg text-gray-700 bg-gray-200 hover:bg-gray-300 font-semibold transition-all"
+              >
+                No, cerrar
+              </button>
+              <button
+                onClick={() => {
+                  setModalConfirmacionCancelacion({ isOpen: false, motivo: '', ordenFolio: null })
+                  window.print()
+                }}
+                className="px-4 py-2 rounded-lg text-white bg-red-600 hover:bg-red-700 font-semibold transition-all flex items-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm0 0V9a2 2 0 012-2h6a2 2 0 012 2v12" />
+                </svg>
+                Sí, imprimir
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
