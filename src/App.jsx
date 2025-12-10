@@ -36,6 +36,15 @@ export default function App() {
     }
   }, [initialized, user, location.pathname, navigate])
 
+  // Lleva la vista al inicio cada vez que cambia la ruta
+  useEffect(() => {
+    try {
+      window.scrollTo({ top: 0, behavior: 'instant' })
+    } catch (e) {
+      window.scrollTo(0, 0)
+    }
+  }, [location.pathname])
+
   return (
     <div className="min-h-screen bg-gray-50">
       {initialized && user && <Header />}
