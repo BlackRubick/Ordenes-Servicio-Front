@@ -543,3 +543,27 @@ export async function downloadOrdenPDF(orden) {
   const fileName = `Orden_${orden.folio || 'servicio'}.pdf`
   doc.save(fileName)
 }
+
+// Abre el PDF en una pestaña temporal y lanza el diálogo de impresión
+export async function printOrdenPDF(orden) {
+  const doc = await generateOrdenPDF(orden)
+  const blobUrl = doc.output('bloburl')
+  const printWindow = window.open(blobUrl)
+
+  if (!printWindow) {
+    throw new Error('No se pudo abrir la vista de impresión (popup bloqueado)')
+  }
+
+  const triggerPrint = () => {
+    try {
+      printWindow.focus()
+      printWindow.print()
+    } catch (e) {
+      console.warn('Error al imprimir PDF', e)
+    }
+  }
+
+  // Algunos navegadores no disparan load para blob://, por eso el fallback con timeout
+  try { printWindow.addEventListener('load', () => setTimeout(triggerPrint, 200)) } catch (e) {}
+  setTimeout(triggerPrint, 500)
+}

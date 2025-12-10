@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { storageService } from '../../services/storage.service'
-import { downloadOrdenPDF, generateOrdenPDF } from '../../services/pdf.service'
+import { downloadOrdenPDF, generateOrdenPDF, printOrdenPDF } from '../../services/pdf.service'
 import { getProducts } from '../../services/woocommerce.service'
 import { useAuth } from '../../context/AuthContext'
 
@@ -838,7 +838,9 @@ export default function OrdenDetalle() {
           Generar PDF
         </button>
         <button 
-          onClick={() => window.print()} 
+          onClick={async () => {
+            try { await printOrdenPDF({ ...orden, ...form }) } catch (e) { console.error('Error al imprimir PDF', e); alert('No se pudo imprimir el PDF') }
+          }} 
           className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-all font-bold shadow-md hover:shadow-lg flex items-center gap-2"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

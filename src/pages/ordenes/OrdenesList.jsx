@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Plus, Search, FileText, Eye, Download, Filter, TrendingUp, Package, Calendar, X, AlertCircle, CheckCircle2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { storageService } from '../../services/storage.service'
+import { printOrdenPDF } from '../../services/pdf.service'
 import { useAuth } from '../../context/AuthContext'
 
 function getEstadoBadge(estado) {
@@ -216,7 +217,7 @@ export default function OrdenesList() {
   const [estadoFiltro, setEstadoFiltro] = useState('Todos')
   const [modalCancelacion, setModalCancelacion] = useState({ isOpen: false, ordenId: null, ordenFolio: null })
   const [modalEntrega, setModalEntrega] = useState({ isOpen: false, ordenId: null, ordenFolio: null })
-  const [modalConfirmacionCancelacion, setModalConfirmacionCancelacion] = useState({ isOpen: false, motivo: '', ordenFolio: null })
+  const [modalConfirmacionCancelacion, setModalConfirmacionCancelacion] = useState({ isOpen: false, motivo: '', ordenFolio: null, orden: null })
   const navigate = useNavigate()
   const { user } = useAuth()
 
@@ -238,13 +239,13 @@ export default function OrdenesList() {
 
   async function cancelarOrden(ordenId, motivo, ordenFolio) {
     try {
-      await storageService.updateOrden(ordenId, { 
+      const updated = await storageService.updateOrden(ordenId, { 
         estado: 'Cancelado',
         motivoCancelacion: motivo,
         fechaCancelacion: new Date().toLocaleDateString('es-ES')
       })
       setModalCancelacion({ isOpen: false, ordenId: null, ordenFolio: null })
-      setModalConfirmacionCancelacion({ isOpen: true, motivo, ordenFolio })
+      setModalConfirmacionCancelacion({ isOpen: true, motivo, ordenFolio, orden: updated })
       load()
     } catch (err) {
       alert('Error al cancelar la orden')
@@ -623,15 +624,20 @@ export default function OrdenesList() {
 
             <div className="bg-gray-50 px-6 py-4 flex gap-3 justify-end border-t-2 border-gray-100">
               <button
-                onClick={() => setModalConfirmacionCancelacion({ isOpen: false, motivo: '', ordenFolio: null })}
+                onClick={() => setModalConfirmacionCancelacion({ isOpen: false, motivo: '', ordenFolio: null, orden: null })}
                 className="px-4 py-2 rounded-lg text-gray-700 bg-gray-200 hover:bg-gray-300 font-semibold transition-all"
               >
                 No, cerrar
               </button>
               <button
-                onClick={() => {
-                  setModalConfirmacionCancelacion({ isOpen: false, motivo: '', ordenFolio: null })
-                  window.print()
+                onClick={async () => {
+                  const toPrint = modalConfirmacionCancelacion.orden || ordenes.find(o => o.folio === modalConfirmacionCancelacion.ordenFolio)
+                  setModalConfirmacionCancelacion({ isOpen: false, motivo: '', ordenFolio: null, orden: null })
+                  if (toPrint) {
+                    try { await printOrdenPDF(toPrint) } catch (e) { console.error('Error al imprimir PDF', e); alert('No se pudo imprimir el PDF') }
+                  } else {
+                    alert('No se encontró la orden para imprimir')
+                  }
                 }}
                 className="px-4 py-2 rounded-lg text-white bg-red-600 hover:bg-red-700 font-semibold transition-all flex items-center gap-2"
               >
