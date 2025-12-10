@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Plus, Search, FileText, Eye, Download, Filter, TrendingUp, Package, Calendar } from 'lucide-react'
+import { Plus, Search, FileText, Eye, Download, Filter, TrendingUp, Package, Calendar, X, AlertCircle, CheckCircle2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { storageService } from '../../services/storage.service'
 import { useAuth } from '../../context/AuthContext'
@@ -61,11 +61,161 @@ function StatCard({ label, count, estado, isActive, onClick, icon: Icon }) {
   )
 }
 
+function ModalCancelacion({ isOpen, onClose, onConfirm, ordenFolio }) {
+  const [motivo, setMotivo] = useState('')
+
+  const handleConfirm = () => {
+    if (motivo.trim()) {
+      onConfirm(motivo)
+      setMotivo('')
+    }
+  }
+
+  const handleClose = () => {
+    setMotivo('')
+    onClose()
+  }
+
+  if (!isOpen) return null
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden animate-in">
+        <div className="bg-gradient-to-r from-red-500 to-red-600 px-6 py-4 flex items-center gap-3">
+          <AlertCircle className="w-6 h-6 text-white" />
+          <h2 className="text-xl font-bold text-white">Cancelar Orden</h2>
+        </div>
+
+        <div className="p-6">
+          <p className="text-gray-700 font-semibold mb-2">Orden: <span className="text-red-600 font-mono">{ordenFolio}</span></p>
+          <p className="text-gray-600 text-sm mb-4">
+            Una vez cancelada, la orden no podrá ser modificada. Por favor, indica el motivo de la cancelación:
+          </p>
+          
+          <textarea
+            value={motivo}
+            onChange={(e) => setMotivo(e.target.value)}
+            placeholder="Escribe el motivo de la cancelación..."
+            className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-red-500 focus:ring-2 focus:ring-red-400 transition-all resize-none"
+            rows="4"
+          />
+        </div>
+
+        <div className="bg-gray-50 px-6 py-4 flex gap-3 justify-end border-t-2 border-gray-100">
+          <button
+            onClick={handleClose}
+            className="px-4 py-2 rounded-lg text-gray-700 bg-gray-200 hover:bg-gray-300 font-semibold transition-all"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={handleConfirm}
+            disabled={!motivo.trim()}
+            className={`px-4 py-2 rounded-lg text-white font-semibold transition-all ${
+              motivo.trim() 
+                ? 'bg-red-600 hover:bg-red-700 cursor-pointer' 
+                : 'bg-red-300 cursor-not-allowed opacity-50'
+            }`}
+          >
+            Confirmar Cancelación
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function ModalEntrega({ isOpen, onClose, onConfirm, ordenFolio }) {
+  const [quienRecibe, setQuienRecibe] = useState('')
+  const [fechaEntrega, setFechaEntrega] = useState(new Date().toISOString().split('T')[0])
+
+  const handleConfirm = () => {
+    if (quienRecibe.trim() && fechaEntrega) {
+      onConfirm({ quienRecibe, fechaEntrega })
+      setQuienRecibe('')
+      setFechaEntrega(new Date().toISOString().split('T')[0])
+    }
+  }
+
+  const handleClose = () => {
+    setQuienRecibe('')
+    setFechaEntrega(new Date().toISOString().split('T')[0])
+    onClose()
+  }
+
+  if (!isOpen) return null
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden animate-in">
+        <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 px-6 py-4 flex items-center gap-3">
+          <CheckCircle2 className="w-6 h-6 text-white" />
+          <h2 className="text-xl font-bold text-white">Entregar Orden</h2>
+        </div>
+
+        <div className="p-6">
+          <p className="text-gray-700 font-semibold mb-4">Orden: <span className="text-emerald-600 font-mono">{ordenFolio}</span></p>
+          
+          <div className="mb-4">
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Fecha de Entrega
+            </label>
+            <input
+              type="date"
+              value={fechaEntrega}
+              onChange={(e) => setFechaEntrega(e.target.value)}
+              className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-emerald-500 focus:ring-2 focus:ring-emerald-400 transition-all"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              ¿Quién Recibe?
+            </label>
+            <input
+              type="text"
+              value={quienRecibe}
+              onChange={(e) => setQuienRecibe(e.target.value)}
+              placeholder="Nombre de quien recibe la orden..."
+              className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-emerald-500 focus:ring-2 focus:ring-emerald-400 transition-all"
+            />
+            <p className="text-xs text-gray-500 mt-2">
+              Si es diferente del cliente, escribe el nombre de quién recibe la orden.
+            </p>
+          </div>
+        </div>
+
+        <div className="bg-gray-50 px-6 py-4 flex gap-3 justify-end border-t-2 border-gray-100">
+          <button
+            onClick={handleClose}
+            className="px-4 py-2 rounded-lg text-gray-700 bg-gray-200 hover:bg-gray-300 font-semibold transition-all"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={handleConfirm}
+            disabled={!quienRecibe.trim() || !fechaEntrega}
+            className={`px-4 py-2 rounded-lg text-white font-semibold transition-all ${
+              quienRecibe.trim() && fechaEntrega
+                ? 'bg-emerald-600 hover:bg-emerald-700 cursor-pointer' 
+                : 'bg-emerald-300 cursor-not-allowed opacity-50'
+            }`}
+          >
+            Confirmar Entrega
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function OrdenesList() {
   const [ordenes, setOrdenes] = useState([])
   const [filteredOrdenes, setFilteredOrdenes] = useState([])
   const [searchTerm, setSearchTerm] = useState('')
   const [estadoFiltro, setEstadoFiltro] = useState('Todos')
+  const [modalCancelacion, setModalCancelacion] = useState({ isOpen: false, ordenId: null, ordenFolio: null })
+  const [modalEntrega, setModalEntrega] = useState({ isOpen: false, ordenId: null, ordenFolio: null })
   const navigate = useNavigate()
   const { user } = useAuth()
 
@@ -83,6 +233,52 @@ export default function OrdenesList() {
       alert('Error al actualizar el estado')
       console.error(err)
     }
+  }
+
+  async function cancelarOrden(ordenId, motivo) {
+    try {
+      await storageService.updateOrden(ordenId, { 
+        estado: 'Cancelado',
+        motivoCancelacion: motivo,
+        fechaCancelacion: new Date().toLocaleDateString('es-ES')
+      })
+      setModalCancelacion({ isOpen: false, ordenId: null, ordenFolio: null })
+      load()
+    } catch (err) {
+      alert('Error al cancelar la orden')
+      console.error(err)
+    }
+  }
+
+  function abrirModalCancelacion(ordenId, ordenFolio) {
+    setModalCancelacion({ isOpen: true, ordenId, ordenFolio })
+  }
+
+  function cerrarModalCancelacion() {
+    setModalCancelacion({ isOpen: false, ordenId: null, ordenFolio: null })
+  }
+
+  async function entregarOrden(ordenId, datos) {
+    try {
+      await storageService.updateOrden(ordenId, { 
+        estado: 'Entregado',
+        quienRecibe: datos.quienRecibe,
+        fechaEntrega: datos.fechaEntrega
+      })
+      setModalEntrega({ isOpen: false, ordenId: null, ordenFolio: null })
+      load()
+    } catch (err) {
+      alert('Error al registrar la entrega')
+      console.error(err)
+    }
+  }
+
+  function abrirModalEntrega(ordenId, ordenFolio) {
+    setModalEntrega({ isOpen: true, ordenId, ordenFolio })
+  }
+
+  function cerrarModalEntrega() {
+    setModalEntrega({ isOpen: false, ordenId: null, ordenFolio: null })
   }
 
   useEffect(() => { load() }, [])
@@ -295,19 +491,31 @@ export default function OrdenesList() {
                           {o.equipo?.marca}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <select
-                          value={o.estado}
-                          onChange={(e) => cambiarEstado(o.id, e.target.value)}
-                          className={`px-3 py-2 rounded-lg text-xs font-bold border-2 focus:ring-2 focus:ring-offset-1 cursor-pointer transition-all ${getEstadoSelectClass(o.estado)}`}
-                        >
-                          <option value="Pendiente">Pendiente</option>
-                          <option value="En revisión">En revisión</option>
-                          <option value="En reparación">En reparación</option>
-                          <option value="Listo">Listo</option>
-                          <option value="Entregado">Entregado</option>
-                          <option value="Cancelado">Cancelado</option>
-                        </select>
+                      <td className="px-6 py-4">
+                        {o.estado === 'Cancelado' ? (
+                          <div className="space-y-2">
+                            <div className="px-3 py-2 rounded-lg bg-red-50 border-2 border-red-300">
+                              <span className="text-xs font-bold text-red-700">Cancelado</span>
+                            </div>
+                            {o.motivoCancelacion && (
+                              <div className="text-xs text-gray-600 bg-gray-50 p-2 rounded border border-gray-300">
+                                <p className="font-semibold text-gray-700 mb-1">Motivo:</p>
+                                <p>{o.motivoCancelacion}</p>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <select
+                            value={o.estado}
+                            onChange={(e) => cambiarEstado(o.id, e.target.value)}
+                            className={`px-3 py-2 rounded-lg text-xs font-bold border-2 focus:ring-2 focus:ring-offset-1 cursor-pointer transition-all ${getEstadoSelectClass(o.estado)}`}
+                          >
+                            <option value="Pendiente">Pendiente</option>
+                            <option value="En revisión">En revisión</option>
+                            <option value="En reparación">En reparación</option>
+                            <option value="Listo">Listo</option>
+                          </select>
+                        )}
                       </td>
                       <td className="px-6 py-4">
                         <div className="text-sm font-medium text-gray-700">
@@ -322,6 +530,7 @@ export default function OrdenesList() {
                             onClick={() => navigate(`/ordenes/${o.id}`)}
                             className="p-2.5 text-sky-600 hover:bg-sky-100 rounded-lg transition-all group-hover:scale-110"
                             title="Ver detalles"
+                            disabled={o.estado === 'Cancelado'}
                           >
                             <Eye className="w-5 h-5" />
                           </button>
@@ -329,9 +538,28 @@ export default function OrdenesList() {
                             onClick={() => navigate(`/ordenes/${o.id}/pdf`)}
                             className="p-2.5 text-orange-600 hover:bg-orange-100 rounded-lg transition-all group-hover:scale-110"
                             title="Descargar PDF"
+                            disabled={o.estado === 'Cancelado'}
                           >
                             <Download className="w-5 h-5" />
                           </button>
+                          {o.estado !== 'Cancelado' && (
+                            <button
+                              onClick={() => abrirModalCancelacion(o.id, o.folio)}
+                              className="px-3 py-2 bg-red-600 text-white text-xs font-bold rounded-lg hover:bg-red-700 transition-all group-hover:scale-105"
+                              title="Cancelar orden"
+                            >
+                              Cancelar
+                            </button>
+                          )}
+                          {o.estado === 'Listo' && (
+                            <button
+                              onClick={() => abrirModalEntrega(o.id, o.folio)}
+                              className="px-3 py-2 bg-emerald-600 text-white text-xs font-bold rounded-lg hover:bg-emerald-700 transition-all group-hover:scale-105"
+                              title="Registrar entrega"
+                            >
+                              Entregar
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -355,6 +583,22 @@ export default function OrdenesList() {
           </div>
         )}
       </div>
+
+      {/* Modal de Cancelación */}
+      <ModalCancelacion
+        isOpen={modalCancelacion.isOpen}
+        onClose={cerrarModalCancelacion}
+        onConfirm={(motivo) => cancelarOrden(modalCancelacion.ordenId, motivo)}
+        ordenFolio={modalCancelacion.ordenFolio}
+      />
+
+      {/* Modal de Entrega */}
+      <ModalEntrega
+        isOpen={modalEntrega.isOpen}
+        onClose={cerrarModalEntrega}
+        onConfirm={(datos) => entregarOrden(modalEntrega.ordenId, datos)}
+        ordenFolio={modalEntrega.ordenFolio}
+      />
     </div>
   )
 }

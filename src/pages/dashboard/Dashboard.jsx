@@ -12,7 +12,8 @@ import {
   AlertCircle,
   Users,
   ArrowRight,
-  Activity
+  Activity,
+  XCircle
 } from 'lucide-react'
 import { storageService } from '../../services/storage.service'
 
@@ -73,6 +74,7 @@ export default function Dashboard() {
     enReparacion: 0,
     listos: 0,
     entregados: 0,
+    canceladas: 0,
     total: 0
   })
   const [recentOrders, setRecentOrders] = useState([])
@@ -96,6 +98,7 @@ export default function Dashboard() {
       enReparacion: ordenes.filter(o => o.estado === 'En reparación').length,
       listos: ordenes.filter(o => o.estado === 'Listo').length,
       entregados: ordenes.filter(o => o.estado === 'Entregado').length,
+      canceladas: ordenes.filter(o => o.estado === 'Cancelado').length,
       total: ordenes.length
     })
 
@@ -166,7 +169,7 @@ export default function Dashboard() {
           />
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 mb-8">
           <StatCard
             title="En Revisión"
             value={stats.enRevision}
@@ -180,6 +183,13 @@ export default function Dashboard() {
             icon={Package}
             color="border-gray-500"
             description="Completadas"
+          />
+          <StatCard
+            title="Canceladas"
+            value={stats.canceladas}
+            icon={XCircle}
+            color="border-red-500"
+            description="No completadas"
           />
           <StatCard
             title="Total"

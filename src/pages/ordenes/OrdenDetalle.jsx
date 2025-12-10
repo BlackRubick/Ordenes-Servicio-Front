@@ -37,6 +37,8 @@ export default function OrdenDetalle() {
       costoTotal: o.costoTotal || 0,
       fechaEstimada: o.fechaEstimada || '',
       fechaFinalizacion: o.fechaFinalizacion || '',
+      fechaEntrega: o.fechaEntrega || '',
+      quienRecibe: o.quienRecibe || '',
       estado: o.estado || 'En revisión'
     })
     try {
@@ -251,6 +253,8 @@ export default function OrdenDetalle() {
       costoTotal: Number(form.costoTotal) || 0,
       fechaEstimada: form.fechaEstimada,
       fechaFinalizacion: form.fechaFinalizacion,
+      fechaEntrega: form.fechaEntrega,
+      quienRecibe: form.quienRecibe,
       estado: form.estado,
       actualizadoPor: 'local'
     }
@@ -547,6 +551,53 @@ export default function OrdenDetalle() {
           )}
         </div>
       </div>
+
+      {/* Información de Entrega */}
+      {(orden?.estado === 'Entregado' || (form.fechaEntrega && form.quienRecibe)) && (
+        <div className="bg-white rounded-xl shadow-lg p-6 mb-6 border-t-4 border-emerald-500 hover:shadow-xl transition-shadow">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-emerald-400 rounded-full flex items-center justify-center">
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-bold text-gray-800">Información de Entrega</h3>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Fecha de Entrega</label>
+              {canEdit ? (
+                <input
+                  type="date"
+                  value={form.fechaEntrega}
+                  onChange={(e) => updateField('fechaEntrega', e.target.value)}
+                  className="w-full p-3 border-2 border-gray-300 rounded-lg focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all font-medium"
+                />
+              ) : (
+                <div className="p-3 border-2 border-emerald-200 rounded-lg bg-emerald-50 font-medium text-gray-800">
+                  {form.fechaEntrega || (orden?.fechaEntrega ? orden.fechaEntrega : 'No registrada')}
+                </div>
+              )}
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">¿Quién Recibe?</label>
+              {canEdit ? (
+                <input
+                  type="text"
+                  value={form.quienRecibe}
+                  onChange={(e) => updateField('quienRecibe', e.target.value)}
+                  placeholder="Nombre de quien recibe..."
+                  className="w-full p-3 border-2 border-gray-300 rounded-lg focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all"
+                />
+              ) : (
+                <div className="p-3 border-2 border-emerald-200 rounded-lg bg-emerald-50 font-medium text-gray-800">
+                  {form.quienRecibe || (orden?.quienRecibe ? orden.quienRecibe : 'No registrado')}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Diagnóstico */}
       <div className="bg-white rounded-xl shadow-lg p-6 mb-6 border-l-4 border-[#0078ff]">
