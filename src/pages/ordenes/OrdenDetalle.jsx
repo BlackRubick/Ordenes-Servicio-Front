@@ -73,7 +73,7 @@ export default function OrdenDetalle() {
   }, [loading, form.piezasUsadas, productSelected, productSuggestions])
 
   const { user } = useAuth()
-  const canEdit = user?.rol === 'admin'
+  const canEdit = user?.rol === 'admin' && orden?.estado !== 'Cancelado'
   const canSign = user?.rol === 'admin' || (user?.rol === 'tecnico' && orden?.tecnicoUid === user.uid)
 
   useEffect(() => {
@@ -418,6 +418,32 @@ export default function OrdenDetalle() {
           </div>
         </div>
       </div>
+
+      {/* Banner de Orden Cancelada */}
+      {orden.estado === 'Cancelado' && (
+        <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-lg">
+          <div className="flex items-start gap-3">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-red-500 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-red-800 mb-1">Orden Cancelada</h3>
+              <p className="text-red-700 text-sm mb-2">Esta orden ha sido cancelada y no puede ser modificada.</p>
+              {orden.motivoCancelacion && (
+                <div className="bg-white border border-red-200 rounded p-3 mt-3">
+                  <p className="text-sm font-semibold text-red-900 mb-1">Motivo de cancelación:</p>
+                  <p className="text-red-800 text-sm">{orden.motivoCancelacion}</p>
+                  {orden.fechaCancelacion && (
+                    <p className="text-xs text-red-600 mt-2">Cancelada el {orden.fechaCancelacion}</p>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Cards principales */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">

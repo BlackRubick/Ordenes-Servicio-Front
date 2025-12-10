@@ -530,7 +530,6 @@ export default function OrdenesList() {
                             onClick={() => navigate(`/ordenes/${o.id}`)}
                             className="p-2.5 text-sky-600 hover:bg-sky-100 rounded-lg transition-all group-hover:scale-110"
                             title="Ver detalles"
-                            disabled={o.estado === 'Cancelado'}
                           >
                             <Eye className="w-5 h-5" />
                           </button>
@@ -538,7 +537,6 @@ export default function OrdenesList() {
                             onClick={() => navigate(`/ordenes/${o.id}/pdf`)}
                             className="p-2.5 text-orange-600 hover:bg-orange-100 rounded-lg transition-all group-hover:scale-110"
                             title="Descargar PDF"
-                            disabled={o.estado === 'Cancelado'}
                           >
                             <Download className="w-5 h-5" />
                           </button>
