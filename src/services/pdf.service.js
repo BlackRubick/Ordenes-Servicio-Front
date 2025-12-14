@@ -575,63 +575,131 @@ export async function printOrdenPDF(orden) {
   try { printWindow.addEventListener('load', () => setTimeout(triggerPrint, 200)) } catch (e) {}
   setTimeout(triggerPrint, 500)
 }
-
-// Ticket compacto con info esencial y link de consulta
+// Ticket compacto con diseño mejorado
 export async function generateOrdenTicketPDF(orden) {
   const doc = new jsPDF({ unit: 'mm', format: [80, 200] })
   const margin = 6
+  const pageWidth = 80
+  const contentWidth = pageWidth - (margin * 2)
   let y = 8
   const consultaUrl = `${(typeof window !== 'undefined' && window.location ? window.location.origin : 'https://sieeg.com.mx')}/consulta?folio=${encodeURIComponent(orden.folio || '')}`
 
+  // Logo centrado
+  let logoData = null
+  try { logoData = await urlToDataUrl('/sieeg-new.png') } catch (e) {}
+  if (logoData) {
+    try {
+      doc.addImage(logoData, 'PNG', (pageWidth - 24) / 2, y, 24, 12)
+    } catch (e) {}
+  }
+  y += 15
+
+  // Título centrado
   doc.setFont('helvetica', 'bold')
+  doc.setFontSize(13)
+  const titulo = 'ORDEN DE SERVICIO'
+  doc.text(titulo, pageWidth / 2, y, { align: 'center' })
+  y += 5
+  
+  // Línea decorativa
+  doc.setDrawColor(0, 0, 0)
+  doc.setLineWidth(0.4)
+  doc.line(margin + 10, y, pageWidth - margin - 10, y)
+  y += 6
+
+  // Folio destacado
+  doc.setFontSize(11)
+  doc.setFont('helvetica', 'bold')
+  doc.text('FOLIO:', margin, y)
   doc.setFontSize(12)
-  doc.text('SIEEG - Orden de Servicio', margin, y)
+  const folioText = orden.folio || '—'
+  const folioWidth = doc.getTextWidth(folioText)
+  doc.text(folioText, pageWidth - margin - folioWidth, y)
   y += 6
-  doc.setFontSize(10)
+
+  doc.setFontSize(9)
   doc.setFont('helvetica', 'normal')
-  doc.text(`Folio: ${orden.folio || '—'}`, margin, y)
-  y += 6
   doc.text(`Fecha: ${orden.fechaIngreso || '—'}`, margin, y)
-  y += 10
-
-  doc.setFont('helvetica', 'bold')
-  doc.text('Cliente', margin, y)
-  doc.setFont('helvetica', 'normal')
-  y += 5
-  doc.text((orden.cliente?.nombre || '—').toString(), margin, y)
-  y += 6
-  if (orden.cliente?.telefono) { doc.text(`Tel: ${orden.cliente.telefono}`, margin, y); y += 6 }
-
-  doc.setFont('helvetica', 'bold')
-  doc.text('Equipo', margin, y)
-  doc.setFont('helvetica', 'normal')
-  y += 5
-  doc.text(`${orden.equipo?.tipo || '—'} ${orden.equipo?.marca || ''}`.trim(), margin, y)
-  y += 5
-  if (orden.equipo?.modelo) { doc.text(`Modelo: ${orden.equipo.modelo}`, margin, y); y += 5 }
-  if (orden.equipo?.numeroSerie) { doc.text(`Serie: ${orden.equipo.numeroSerie}`, margin, y); y += 5 }
-  y += 2
-
-  doc.setFont('helvetica', 'bold')
-  doc.text('Estado', margin, y)
-  doc.setFont('helvetica', 'normal')
-  y += 5
-  doc.text(orden.estado || '—', margin, y)
   y += 8
 
+  // Sección Cliente
+  doc.setFontSize(9)
   doc.setFont('helvetica', 'bold')
-  doc.text('Descripción / Falla', margin, y)
+  doc.text('CLIENTE', margin, y)
+  doc.setDrawColor(200, 200, 200)
+  doc.setLineWidth(0.2)
+  doc.line(margin, y + 1, pageWidth - margin, y + 1)
   y += 5
-  doc.setFont('helvetica', 'normal')
-  const desc = doc.splitTextToSize(String(orden.descripcionFalla || 'Sin descripción'), 68)
-  doc.text(desc, margin, y)
-  y += desc.length * 5 + 4
 
+  doc.setFontSize(10)
+  doc.setFont('helvetica', 'bold')
+  const clienteNombre = doc.splitTextToSize((orden.cliente?.nombre || '—').toString(), contentWidth)
+  doc.text(clienteNombre, margin, y)
+  y += clienteNombre.length * 4.5 + 2
+
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(9)
+  if (orden.cliente?.telefono) {
+    doc.text(`Tel: ${orden.cliente.telefono}`, margin, y)
+    y += 5
+  }
+  y += 3
+
+  // Sección Equipo
+  doc.setFont('helvetica', 'bold')
+  doc.text('EQUIPO', margin, y)
+  doc.line(margin, y + 1, pageWidth - margin, y + 1)
+  y += 5
+
+  doc.setFontSize(10)
+  const equipoTitulo = `${orden.equipo?.tipo || '—'} ${orden.equipo?.marca || ''}`.trim()
+  doc.text(equipoTitulo, margin, y)
+  y += 5
+
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(9)
+  if (orden.equipo?.modelo) {
+    doc.text(`Modelo: ${orden.equipo.modelo}`, margin, y)
+    y += 4
+  }
+  if (orden.equipo?.numeroSerie) {
+    doc.text(`Serie: ${orden.equipo.numeroSerie}`, margin, y)
+    y += 4
+  }
+  y += 3
+
+  // Estado destacado
+  doc.setFont('helvetica', 'bold')
+  doc.text('ESTADO', margin, y)
+  doc.line(margin, y + 1, pageWidth - margin, y + 1)
+  y += 5
+
+  doc.setFontSize(10)
+  doc.setFillColor(245, 245, 245)
+  doc.rect(margin, y - 3, contentWidth, 7, 'F')
+  doc.text(orden.estado || '—', margin + 2, y + 1)
+  y += 9
+
+  // Descripción
+  doc.setFontSize(9)
+  doc.setFont('helvetica', 'bold')
+  doc.text('DESCRIPCIÓN / FALLA', margin, y)
+  doc.line(margin, y + 1, pageWidth - margin, y + 1)
+  y += 5
+
+  doc.setFont('helvetica', 'normal')
+  const desc = doc.splitTextToSize(String(orden.descripcionFalla || 'Sin descripción'), contentWidth)
+  doc.text(desc, margin, y)
+  y += desc.length * 4.5 + 4
+
+  // Accesorios
   if (orden.accesorios && Object.values(orden.accesorios).some(Boolean)) {
     doc.setFont('helvetica', 'bold')
-    doc.text('Accesorios', margin, y)
-    doc.setFont('helvetica', 'normal')
+    doc.text('ACCESORIOS', margin, y)
+    doc.line(margin, y + 1, pageWidth - margin, y + 1)
     y += 5
+
+    doc.setFont('helvetica', 'normal')
     const accList = []
     const acc = orden.accesorios
     if (acc.cargador) accList.push('Cargador')
@@ -641,25 +709,55 @@ export async function generateOrdenTicketPDF(orden) {
     if (acc.funda) accList.push('Funda')
     if (acc.cable) accList.push('Cable')
     if (acc.otro) accList.push(acc.otro)
+    
     if (accList.length) {
-      const accText = doc.splitTextToSize(accList.join(', '), 68)
+      const accText = doc.splitTextToSize(accList.join(', '), contentWidth)
       doc.text(accText, margin, y)
-      y += accText.length * 5 + 4
+      y += accText.length * 4.5 + 3
     }
-    if (acc.patron) { doc.text(`Patron: ${acc.patron}`, margin, y); y += 5 }
-    if (orden.contrasena) { doc.text(`Contraseña: ${orden.contrasena}`, margin, y); y += 5 }
+    
+    if (acc.patron) {
+      doc.text(`Patrón: ${acc.patron}`, margin, y)
+      y += 4
+    }
+    if (orden.contrasena) {
+      doc.text(`Contraseña: ${orden.contrasena}`, margin, y)
+      y += 4
+    }
+    y += 2
   }
 
-  y += 4
-  doc.setFont('helvetica', 'bold')
-  doc.text('Consulta en línea', margin, y)
-  y += 5
-  doc.setFont('helvetica', 'normal')
-  const urlLines = doc.splitTextToSize(consultaUrl, 68)
-  doc.text(urlLines, margin, y)
-  y += urlLines.length * 5 + 6
+  // Consulta en línea
+  y += 3
+  doc.setLineWidth(0.3)
+  doc.line(margin, y, pageWidth - margin, y)
+  y += 6
+
   doc.setFontSize(9)
-  doc.text('Escanea o visita para ver el estado de tu equipo.', margin, y)
+  doc.setFont('helvetica', 'bold')
+  doc.text('CONSULTA EN LÍNEA', margin, y)
+  doc.line(margin, y + 1, pageWidth - margin, y + 1)
+  y += 5
+
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(8)
+  const urlLines = doc.splitTextToSize(consultaUrl, contentWidth)
+  doc.text(urlLines, margin, y)
+  y += urlLines.length * 4 + 4
+
+  doc.setFontSize(8)
+  doc.setFont('helvetica', 'italic')
+  const instruccion = 'Escanea o visita para ver el estado de tu equipo.'
+  doc.text(instruccion, margin, y)
+  y += 6
+
+  // Footer
+  doc.setLineWidth(0.2)
+  doc.line(margin, y, pageWidth - margin, y)
+  y += 4
+  doc.setFontSize(7)
+  doc.setFont('helvetica', 'normal')
+  doc.text('Gracias por confiar en SIEEG', pageWidth / 2, y, { align: 'center' })
 
   return doc
 }
