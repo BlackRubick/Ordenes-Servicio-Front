@@ -191,7 +191,6 @@ export async function generateOrdenPDF(orden) {
   doc.setFontSize(20)
   doc.setFont('helvetica', 'bold')
   doc.setTextColor(30, 64, 175)
-  doc.text('SIEEG', margin + 120, y + 22)
   
   doc.setFontSize(10)
   doc.setFont('helvetica', 'normal')
@@ -199,7 +198,7 @@ export async function generateOrdenPDF(orden) {
   doc.text('Ingeniería y Telecomunicaciones', margin + 120, y + 38)
   doc.setFontSize(9)
   doc.setTextColor(100, 116, 139)
-  doc.text('Ingreso de equipo a revisión/reparación', margin + 120, y + 52)
+  doc.text('Orden de Servicio', margin + 120, y + 52)
   
   // Caja de folio mejorada con sombra
   const infoBoxX = pageWidth - margin - 170
@@ -272,9 +271,10 @@ export async function generateOrdenPDF(orden) {
 
   // ===== SECCIÓN: ACCESORIOS Y SEGURIDAD =====
   const accH = 145
-  drawSection(doc, margin, y, pageWidth - 2 * margin, accH, 'ACCESORIOS Y SEGURIDAD')
+  const accTop = y
+  drawSection(doc, margin, accTop, pageWidth - 2 * margin, accH, 'ACCESORIOS Y SEGURIDAD')
   
-  y += 42
+  y = accTop + 42
   
   // Checkboxes con mejor espaciado
   const checkboxes = [
@@ -318,11 +318,13 @@ export async function generateOrdenPDF(orden) {
     
     // Patrón (solo si existe)
     if (tienePatron) {
+      const patternLabelY = accTop + 70
+      const patternGridY = accTop + 82 // alineado dentro del recuadro sin desbordar
       doc.setFontSize(7.5)
       doc.setTextColor(100, 116, 139)
       doc.setFont('helvetica', 'bold')
-      doc.text('PATRÓN DE SEGURIDAD', currentX, y - 2)
-      drawPatternGrid(doc, currentX + 48, y - 8, 52, patronVal)
+      doc.text('PATRÓN DE SEGURIDAD', currentX, patternLabelY)
+      drawPatternGrid(doc, currentX + 6, patternGridY, 52, patronVal)
       currentX += 140
     }
     
