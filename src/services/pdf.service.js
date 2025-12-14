@@ -575,3 +575,108 @@ export async function printOrdenPDF(orden) {
   try { printWindow.addEventListener('load', () => setTimeout(triggerPrint, 200)) } catch (e) {}
   setTimeout(triggerPrint, 500)
 }
+
+// Ticket compacto con info esencial y link de consulta
+export async function generateOrdenTicketPDF(orden) {
+  const doc = new jsPDF({ unit: 'mm', format: [80, 200] })
+  const margin = 6
+  let y = 8
+  const consultaUrl = `${(typeof window !== 'undefined' && window.location ? window.location.origin : 'https://sieeg.com.mx')}/consulta?folio=${encodeURIComponent(orden.folio || '')}`
+
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(12)
+  doc.text('SIEEG - Orden de Servicio', margin, y)
+  y += 6
+  doc.setFontSize(10)
+  doc.setFont('helvetica', 'normal')
+  doc.text(`Folio: ${orden.folio || '—'}`, margin, y)
+  y += 6
+  doc.text(`Fecha: ${orden.fechaIngreso || '—'}`, margin, y)
+  y += 10
+
+  doc.setFont('helvetica', 'bold')
+  doc.text('Cliente', margin, y)
+  doc.setFont('helvetica', 'normal')
+  y += 5
+  doc.text((orden.cliente?.nombre || '—').toString(), margin, y)
+  y += 6
+  if (orden.cliente?.telefono) { doc.text(`Tel: ${orden.cliente.telefono}`, margin, y); y += 6 }
+
+  doc.setFont('helvetica', 'bold')
+  doc.text('Equipo', margin, y)
+  doc.setFont('helvetica', 'normal')
+  y += 5
+  doc.text(`${orden.equipo?.tipo || '—'} ${orden.equipo?.marca || ''}`.trim(), margin, y)
+  y += 5
+  if (orden.equipo?.modelo) { doc.text(`Modelo: ${orden.equipo.modelo}`, margin, y); y += 5 }
+  if (orden.equipo?.numeroSerie) { doc.text(`Serie: ${orden.equipo.numeroSerie}`, margin, y); y += 5 }
+  y += 2
+
+  doc.setFont('helvetica', 'bold')
+  doc.text('Estado', margin, y)
+  doc.setFont('helvetica', 'normal')
+  y += 5
+  doc.text(orden.estado || '—', margin, y)
+  y += 8
+
+  doc.setFont('helvetica', 'bold')
+  doc.text('Descripción / Falla', margin, y)
+  y += 5
+  doc.setFont('helvetica', 'normal')
+  const desc = doc.splitTextToSize(String(orden.descripcionFalla || 'Sin descripción'), 68)
+  doc.text(desc, margin, y)
+  y += desc.length * 5 + 4
+
+  if (orden.accesorios && Object.values(orden.accesorios).some(Boolean)) {
+    doc.setFont('helvetica', 'bold')
+    doc.text('Accesorios', margin, y)
+    doc.setFont('helvetica', 'normal')
+    y += 5
+    const accList = []
+    const acc = orden.accesorios
+    if (acc.cargador) accList.push('Cargador')
+    if (acc.simCard) accList.push('SIM Card')
+    if (acc.bandejaSIM) accList.push('Bandeja SIM')
+    if (acc.memoriaSD) accList.push('Memoria SD')
+    if (acc.funda) accList.push('Funda')
+    if (acc.cable) accList.push('Cable')
+    if (acc.otro) accList.push(acc.otro)
+    if (accList.length) {
+      const accText = doc.splitTextToSize(accList.join(', '), 68)
+      doc.text(accText, margin, y)
+      y += accText.length * 5 + 4
+    }
+    if (acc.patron) { doc.text(`Patron: ${acc.patron}`, margin, y); y += 5 }
+    if (orden.contrasena) { doc.text(`Contraseña: ${orden.contrasena}`, margin, y); y += 5 }
+  }
+
+  y += 4
+  doc.setFont('helvetica', 'bold')
+  doc.text('Consulta en línea', margin, y)
+  y += 5
+  doc.setFont('helvetica', 'normal')
+  const urlLines = doc.splitTextToSize(consultaUrl, 68)
+  doc.text(urlLines, margin, y)
+  y += urlLines.length * 5 + 6
+  doc.setFontSize(9)
+  doc.text('Escanea o visita para ver el estado de tu equipo.', margin, y)
+
+  return doc
+}
+
+export async function downloadOrdenTicketPDF(orden) {
+  const doc = await generateOrdenTicketPDF(orden)
+  const fileName = `Ticket_${orden.folio || 'servicio'}.pdf`
+  doc.save(fileName)
+}
+
+export async function printOrdenTicketPDF(orden) {
+  const doc = await generateOrdenTicketPDF(orden)
+  const blobUrl = doc.output('bloburl')
+  const printWindow = window.open(blobUrl)
+  if (!printWindow) throw new Error('No se pudo abrir la vista de impresión (popup bloqueado)')
+
+  const triggerPrint = () => { try { printWindow.focus(); printWindow.print() } catch (e) { console.warn('Error al imprimir ticket', e) } }
+  try { printWindow.addEventListener('load', () => setTimeout(triggerPrint, 200)) } catch (e) {}
+  setTimeout(triggerPrint, 500)
+}
