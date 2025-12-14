@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { storageService } from '../../services/storage.service'
-import { downloadOrdenPDF, generateOrdenPDF, printOrdenPDF } from '../../services/pdf.service'
+import { downloadOrdenPDF, generateOrdenPDF, printOrdenPDF, printOrdenTicketPDF } from '../../services/pdf.service'
 import { getProducts } from '../../services/woocommerce.service'
 import { useAuth } from '../../context/AuthContext'
 
@@ -847,6 +847,17 @@ export default function OrdenDetalle() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm0 0V9a2 2 0 012-2h6a2 2 0 012 2v12" />
           </svg>
           Imprimir
+        </button>
+        <button 
+          onClick={async () => {
+            try { await printOrdenTicketPDF({ ...orden, ...form }) } catch (e) { console.error('Error al imprimir ticket', e); alert('No se pudo imprimir el ticket') }
+          }} 
+          className="px-6 py-3 bg-white border-2 border-gray-400 text-gray-700 rounded-lg hover:bg-gray-50 transition-all font-bold shadow-md hover:shadow-lg flex items-center gap-2"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m-6 4h6m-6 4h6M7 3h10a2 2 0 012 2v2a2 2 0 010 4 2 2 0 010 4 2 2 0 010 4v2a2 2 0 01-2 2H7a2 2 0 01-2-2v-2a2 2 0 010-4 2 2 0 010-4 2 2 0 010-4V5a2 2 0 012-2z" />
+          </svg>
+          Imprimir ticket
         </button>
         {canEdit && (
           <>

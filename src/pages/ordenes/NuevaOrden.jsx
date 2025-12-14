@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Save, FileText, Trash2, Check, User, Smartphone, Shield, AlertCircle, Pencil } from 'lucide-react'
-import { printOrdenPDF } from '../../services/pdf.service'
+import { printOrdenPDF, printOrdenTicketPDF } from '../../services/pdf.service'
 import { storageService } from '../../services/storage.service'
 import { generateFolio } from '../../utils/folio'
 import { findTechnicians } from '../../services/user.service'
@@ -390,6 +390,7 @@ export default function NuevaOrden() {
     const created = await storageService.createOrden(orden)
     try {
       await printOrdenPDF(created)
+      await printOrdenTicketPDF(created)
     } catch (err) {
       console.warn('Error printing on create', err)
     }
