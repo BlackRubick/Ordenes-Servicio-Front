@@ -276,7 +276,7 @@ export async function generateOrdenPDF(orden) {
   
   y = accTop + 42
   
-  // Checkboxes con mejor espaciado
+  // Checkboxes: solo mostrar los accesorios seleccionados
   const checkboxes = [
     ['Cargador', orden.accesorios?.cargador],
     ['SIM Card', orden.accesorios?.simCard],
@@ -285,62 +285,64 @@ export async function generateOrdenPDF(orden) {
     ['Funda', orden.accesorios?.funda],
     ['Cable', orden.accesorios?.cable]
   ]
-  
-  let cbX = margin + 15
-  let cbY = y
-  checkboxes.forEach(([label, checked], i) => {
-    drawCheckbox(doc, cbX, cbY, label, checked)
-    cbX += 170
-    if ((i + 1) % 3 === 0) {
-      cbX = margin + 15
-      cbY += 28
-    }
-  })
+  const selectedCheckboxes = checkboxes.filter(([, checked]) => !!checked)
+  const maxCols = 3
+  const colWidth = 170
+  let cbRows = 0
 
-  y += 64
+  if (selectedCheckboxes.length > 0) {
+    let cbX = margin + 15
+    let cbY = y
+    selectedCheckboxes.forEach(([label, checked], i) => {
+      drawCheckbox(doc, cbX, cbY, label, checked)
+      cbX += colWidth
+      const isRowEnd = (i + 1) % maxCols === 0
+      if (isRowEnd) {
+        cbX = margin + 15
+        cbY += 28
+      }
+    })
+    cbRows = Math.ceil(selectedCheckboxes.length / maxCols)
+    y = y + (cbRows * 28) + 6
+  } else {
+    doc.setFontSize(8)
+    doc.setTextColor(120, 120, 120)
+    doc.text('Sin accesorios marcados', margin + 15, y + 12)
+    y = y + 24
+  }
   
   // Detectar si hay patrón o contraseña
   const patronVal = orden.accesorios?.patron || orden.patron || ''
   const contrasenaVal = orden.contrasena || ''
   const tienePatron = patronVal && patronVal.trim().length > 0
   const tieneContrasena = contrasenaVal && contrasenaVal.trim().length > 0
-  
-  // Solo mostrar "Otros accesorios" si no hay patrón ni contraseña (para mantener el layout)
-  if (!tienePatron && !tieneContrasena) {
-    drawField(doc, margin + 15, y, 235, 'Otros accesorios', orden.accesorios?.otro)
-  } else {
-    // Si hay patrón o contraseña, ajustar el layout
-    let currentX = margin + 15
-    
-    // Otros accesorios (más estrecho si hay seguridad)
-    drawField(doc, currentX, y, 200, 'Otros accesorios', orden.accesorios?.otro)
-    currentX = margin + 235
-    
-    // Patrón (solo si existe)
-    if (tienePatron) {
-      const patternLabelY = accTop + 70
-      const patternGridY = accTop + 82 // alineado dentro del recuadro sin desbordar
-      doc.setFontSize(7.5)
-      doc.setTextColor(100, 116, 139)
-      doc.setFont('helvetica', 'bold')
-      doc.text('PATRÓN DE SEGURIDAD', currentX, patternLabelY)
-      drawPatternGrid(doc, currentX + 6, patternGridY, 52, patronVal)
-      currentX += 140
-    }
-    
-    // Contraseña (solo si existe y no hay patrón, o ajustar posición)
-    if (tieneContrasena) {
-      if (!tienePatron) {
-        // Si no hay patrón, contraseña va donde estaría el patrón
-        drawField(doc, margin + 270, y, 240, 'Contraseña', contrasenaVal)
-      } else {
-        // Si hay patrón, contraseña va al final
-        drawField(doc, currentX, y, pageWidth - 2 * margin - currentX + margin, 'Contraseña', contrasenaVal)
-      }
-    }
+  const otrosAccesorios = orden.accesorios?.otro
+
+  // Layout inferior: otros accesorios, patrón y contraseña solo si existen
+  let currentX = margin + 15
+  const baseY = y + 8
+
+  if (otrosAccesorios && String(otrosAccesorios).trim().length > 0) {
+    drawField(doc, currentX, baseY, 220, 'Otros accesorios', otrosAccesorios)
+    currentX += 240
   }
 
-  y += accH - 80
+  if (tienePatron) {
+    doc.setFontSize(7.5)
+    doc.setTextColor(100, 116, 139)
+    doc.setFont('helvetica', 'bold')
+    doc.text('PATRÓN DE SEGURIDAD', currentX, baseY)
+    drawPatternGrid(doc, currentX, baseY + 10, 52, patronVal)
+    currentX += 130
+  }
+
+  if (tieneContrasena) {
+    const availableWidth = pageWidth - margin - currentX - 20
+    drawField(doc, currentX, baseY, Math.max(availableWidth, 120), 'Contraseña', contrasenaVal)
+  }
+
+  // Avanzar dentro de la sección sin romper el recuadro
+  y = accTop + accH - 80
 
   // ===== SECCIÓN: DESCRIPCIÓN DE LA FALLA =====
   const fallaH = 210
