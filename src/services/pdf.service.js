@@ -270,7 +270,7 @@ export async function generateOrdenPDF(orden) {
   y += equipoH - 8
 
   // ===== SECCIÓN: ACCESORIOS Y SEGURIDAD =====
-  const accH = 145
+  const accH = 170
   const accTop = y
   drawSection(doc, margin, accTop, pageWidth - 2 * margin, accH, 'ACCESORIOS Y SEGURIDAD')
   
@@ -320,11 +320,13 @@ export async function generateOrdenPDF(orden) {
 
   // Layout inferior: otros accesorios, patrón y contraseña solo si existen
   let currentX = margin + 15
-  const baseY = y + 8
+  const baseY = Math.max(y + 8, accTop + 72)
+  let lowerRowHeight = 0
 
   if (otrosAccesorios && String(otrosAccesorios).trim().length > 0) {
     drawField(doc, currentX, baseY, 220, 'Otros accesorios', otrosAccesorios)
     currentX += 240
+    lowerRowHeight = Math.max(lowerRowHeight, 24)
   }
 
   if (tienePatron) {
@@ -334,15 +336,17 @@ export async function generateOrdenPDF(orden) {
     doc.text('PATRÓN DE SEGURIDAD', currentX, baseY)
     drawPatternGrid(doc, currentX, baseY + 10, 52, patronVal)
     currentX += 130
+    lowerRowHeight = Math.max(lowerRowHeight, 72)
   }
 
   if (tieneContrasena) {
     const availableWidth = pageWidth - margin - currentX - 20
     drawField(doc, currentX, baseY, Math.max(availableWidth, 120), 'Contraseña', contrasenaVal)
+    lowerRowHeight = Math.max(lowerRowHeight, 24)
   }
 
   // Avanzar dentro de la sección sin romper el recuadro
-  y = accTop + accH - 80
+  y = baseY + lowerRowHeight + 16
 
   // ===== SECCIÓN: DESCRIPCIÓN DE LA FALLA =====
   const fallaH = 210
