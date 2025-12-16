@@ -28,6 +28,9 @@ export default function Header() {
           {user?.rol !== 'tecnico' && (
             <Link to="/ordenes/nueva" className="text-gray-600 hover:text-sieeg">Nueva orden</Link>
           )}
+          {user && user.rol === 'admin' && (
+            <Link to="/ordenes/eliminadas" className="text-gray-600 hover:text-sieeg">Eliminadas</Link>
+          )}
           <Link to="/consulta" className="text-gray-600 hover:text-sieeg">Consulta pública</Link>
           {user && user.rol === 'admin' && (
             <Link to="/tecnicos" className="text-gray-600 hover:text-sieeg">Técnicos</Link>
@@ -94,6 +97,9 @@ export default function Header() {
             <Link onClick={() => setMobileOpen(false)} to="/ordenes" className="py-2 px-2 rounded hover:bg-gray-50">Órdenes</Link>
             {user?.rol !== 'tecnico' && (
               <Link onClick={() => setMobileOpen(false)} to="/ordenes/nueva" className="py-2 px-2 rounded hover:bg-gray-50">Nueva orden</Link>
+            )}
+            {user && user.rol === 'admin' && (
+              <Link onClick={() => setMobileOpen(false)} to="/ordenes/eliminadas" className="py-2 px-2 rounded hover:bg-gray-50">Órdenes Eliminadas</Link>
             )}
             <Link onClick={() => setMobileOpen(false)} to="/consulta" className="py-2 px-2 rounded hover:bg-gray-50">Consulta pública</Link>
             {user && user.rol === 'admin' && (

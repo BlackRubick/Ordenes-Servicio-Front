@@ -3,6 +3,7 @@ import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-
 import LoginPage from './pages/auth/LoginPage'
 import Dashboard from './pages/dashboard/Dashboard'
 import OrdenesList from './pages/ordenes/OrdenesList'
+import OrdenesEliminadas from './pages/ordenes/OrdenesEliminadas'
 import NuevaOrden from './pages/ordenes/NuevaOrden'
 import OrdenDetalle from './pages/ordenes/OrdenDetalle'
 import ConsultaPublica from './pages/consulta/ConsultaPublica'
@@ -62,6 +63,10 @@ export default function App() {
         <Route
           path="/ordenes"
           element={<Protected><OrdenesList /></Protected>}
+        />
+        <Route
+          path="/ordenes/eliminadas"
+          element={<Protected roles={["admin"]}><OrdenesEliminadas /></Protected>}
         />
         <Route
           path="/ordenes/nueva"

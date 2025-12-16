@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Plus, Search, FileText, Eye, Download, Filter, TrendingUp, Package, Calendar, X, AlertCircle, CheckCircle2 } from 'lucide-react'
+import { Plus, Search, FileText, Eye, Download, Filter, TrendingUp, Package, Calendar, X, AlertCircle, CheckCircle2, Trash2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { storageService } from '../../services/storage.service'
 import { printOrdenPDF } from '../../services/pdf.service'
@@ -210,6 +210,71 @@ function ModalEntrega({ isOpen, onClose, onConfirm, ordenFolio }) {
   )
 }
 
+function ModalEliminacion({ isOpen, onClose, onConfirm, ordenFolio }) {
+  const [motivo, setMotivo] = useState('')
+
+  const handleConfirm = () => {
+    if (motivo.trim()) {
+      onConfirm(motivo)
+      setMotivo('')
+    }
+  }
+
+  const handleClose = () => {
+    setMotivo('')
+    onClose()
+  }
+
+  if (!isOpen) return null
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden animate-in">
+        <div className="bg-gradient-to-r from-red-600 to-red-700 px-6 py-4 flex items-center gap-3">
+          <Trash2 className="w-6 h-6 text-white" />
+          <h2 className="text-xl font-bold text-white">Eliminar Orden</h2>
+        </div>
+
+        <div className="p-6">
+          <p className="text-gray-700 font-semibold mb-2">Orden: <span className="text-red-600 font-mono">{ordenFolio}</span></p>
+          <p className="text-gray-600 text-sm mb-4">
+            Esta orden se moverá a la sección de órdenes eliminadas. Podrás restaurarla más tarde si es necesario. Por favor, indica el motivo:
+          </p>
+          
+          <textarea
+            value={motivo}
+            onChange={(e) => setMotivo(e.target.value)}
+            placeholder="Escribe el motivo de eliminación..."
+            className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-red-500 focus:ring-2 focus:ring-red-400 transition-all resize-none"
+            rows="4"
+          />
+        </div>
+
+        <div className="bg-gray-50 px-6 py-4 flex gap-3 justify-end border-t-2 border-gray-100">
+          <button
+            onClick={handleClose}
+            className="px-4 py-2 rounded-lg text-gray-700 bg-gray-200 hover:bg-gray-300 font-semibold transition-all"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={handleConfirm}
+            disabled={!motivo.trim()}
+            className={`px-4 py-2 rounded-lg text-white font-semibold transition-all flex items-center gap-2 ${
+              motivo.trim() 
+                ? 'bg-red-600 hover:bg-red-700 cursor-pointer' 
+                : 'bg-red-300 cursor-not-allowed opacity-50'
+            }`}
+          >
+            <Trash2 className="w-4 h-4" />
+            Confirmar Eliminación
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function OrdenesList() {
   const [ordenes, setOrdenes] = useState([])
   const [filteredOrdenes, setFilteredOrdenes] = useState([])
@@ -217,6 +282,7 @@ export default function OrdenesList() {
   const [estadoFiltro, setEstadoFiltro] = useState('Todos')
   const [modalCancelacion, setModalCancelacion] = useState({ isOpen: false, ordenId: null, ordenFolio: null })
   const [modalEntrega, setModalEntrega] = useState({ isOpen: false, ordenId: null, ordenFolio: null })
+  const [modalEliminacion, setModalEliminacion] = useState({ isOpen: false, ordenId: null, ordenFolio: null })
   const [modalConfirmacionCancelacion, setModalConfirmacionCancelacion] = useState({ isOpen: false, motivo: '', ordenFolio: null, orden: null })
   const navigate = useNavigate()
   const { user } = useAuth()
@@ -282,6 +348,26 @@ export default function OrdenesList() {
 
   function cerrarModalEntrega() {
     setModalEntrega({ isOpen: false, ordenId: null, ordenFolio: null })
+  }
+
+  async function eliminarOrden(ordenId, motivo) {
+    try {
+      await storageService.deleteOrden(ordenId, motivo)
+      setModalEliminacion({ isOpen: false, ordenId: null, ordenFolio: null })
+      load()
+      alert('Orden eliminada correctamente')
+    } catch (err) {
+      alert('Error al eliminar la orden')
+      console.error(err)
+    }
+  }
+
+  function abrirModalEliminacion(ordenId, ordenFolio) {
+    setModalEliminacion({ isOpen: true, ordenId, ordenFolio })
+  }
+
+  function cerrarModalEliminacion() {
+    setModalEliminacion({ isOpen: false, ordenId: null, ordenFolio: null })
   }
 
   useEffect(() => { load() }, [])
@@ -561,6 +647,15 @@ export default function OrdenesList() {
                               Entregar
                             </button>
                           )}
+                          {user?.rol === 'admin' && (
+                            <button
+                              onClick={() => abrirModalEliminacion(o.id, o.folio)}
+                              className="p-2.5 text-red-600 hover:bg-red-100 rounded-lg transition-all group-hover:scale-110"
+                              title="Eliminar orden"
+                            >
+                              <Trash2 className="w-5 h-5" />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -600,6 +695,15 @@ export default function OrdenesList() {
         onConfirm={(datos) => entregarOrden(modalEntrega.ordenId, datos)}
         ordenFolio={modalEntrega.ordenFolio}
       />
+
+      {/* Modal de Eliminación */}
+      <ModalEliminacion
+        isOpen={modalEliminacion.isOpen}
+        onClose={cerrarModalEliminacion}
+        onConfirm={(motivo) => eliminarOrden(modalEliminacion.ordenId, motivo)}
+        ordenFolio={modalEliminacion.ordenFolio}
+      />
+
       {/* Modal de Confirmación de Cancelación */}
       {modalConfirmacionCancelacion.isOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">

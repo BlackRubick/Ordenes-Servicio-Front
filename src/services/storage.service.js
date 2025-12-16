@@ -27,9 +27,20 @@ class StorageService {
     return updated
   }
 
-  async deleteOrden(id) {
-    const res = await api.delete(`/api/ordenes/${id}`)
+  async deleteOrden(id, motivo) {
+    const res = await api.delete(`/api/ordenes/${id}`, { data: { motivo } })
     try { window.dispatchEvent(new CustomEvent('sieeg:ordenes-changed', { detail: { type: 'deleted', id } })) } catch (e) {}
+    return res.data
+  }
+
+  async getOrdenesEliminadas() {
+    const res = await api.get('/api/ordenes/eliminadas')
+    return res.data || []
+  }
+
+  async restoreOrden(id) {
+    const res = await api.post(`/api/ordenes/${id}/restore`)
+    try { window.dispatchEvent(new CustomEvent('sieeg:ordenes-changed', { detail: { type: 'restored', id } })) } catch (e) {}
     return res.data
   }
 
