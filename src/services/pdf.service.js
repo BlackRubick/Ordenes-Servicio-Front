@@ -744,8 +744,8 @@ async function generateOrdenForaneoPDF(orden, doc, pageWidth, margin) {
     
     // ===== FILTROS - Badge centrado =====
     const filtroSI = row.limpiezaFiltros === 'SI'
-    const badgeW = 20
-    const badgeH = 11
+    const badgeW = 24
+    const badgeH = 12
     const badgeY = yFoneo + (rowHeight - badgeH) / 2
     
     const filtroX = xPos + (colWidths[1] - badgeW) / 2
@@ -753,8 +753,8 @@ async function generateOrdenForaneoPDF(orden, doc, pageWidth, margin) {
     doc.roundedRect(filtroX, badgeY, badgeW, badgeH, 2, 2, 'F')
     doc.setTextColor(255, 255, 255)
     doc.setFont('helvetica', 'bold')
-    doc.setFontSize(9)
-    doc.text(filtroSI ? '✓' : '✗', filtroX + badgeW / 2, badgeY + 8, { align: 'center' })
+    doc.setFontSize(7.5)
+    doc.text(filtroSI ? 'SI' : 'NO', filtroX + badgeW / 2, badgeY + 8.5, { align: 'center' })
     xPos += colWidths[1]
     
     // ===== CONDENSADORA - Badge centrado =====
@@ -763,7 +763,9 @@ async function generateOrdenForaneoPDF(orden, doc, pageWidth, margin) {
     doc.setFillColor(...(condSI ? [34, 197, 94] : [239, 68, 68]))
     doc.roundedRect(condX, badgeY, badgeW, badgeH, 2, 2, 'F')
     doc.setTextColor(255, 255, 255)
-    doc.text(condSI ? '✓' : '✗', condX + badgeW / 2, badgeY + 8, { align: 'center' })
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(7.5)
+    doc.text(condSI ? 'SI' : 'NO', condX + badgeW / 2, badgeY + 8.5, { align: 'center' })
     xPos += colWidths[2]
     
     // ===== PRESIÓN GAS - centrado =====
@@ -779,7 +781,9 @@ async function generateOrdenForaneoPDF(orden, doc, pageWidth, margin) {
     doc.setFillColor(...(evapSI ? [34, 197, 94] : [239, 68, 68]))
     doc.roundedRect(evapX, badgeY, badgeW, badgeH, 2, 2, 'F')
     doc.setTextColor(255, 255, 255)
-    doc.text(evapSI ? '✓' : '✗', evapX + badgeW / 2, badgeY + 8, { align: 'center' })
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(7.5)
+    doc.text(evapSI ? 'SI' : 'NO', evapX + badgeW / 2, badgeY + 8.5, { align: 'center' })
     xPos += colWidths[4]
     
     // ===== REVISIÓN ELÉCTRICA - centrado con color =====
