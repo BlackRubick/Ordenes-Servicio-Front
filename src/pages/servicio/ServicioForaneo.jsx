@@ -235,7 +235,7 @@ export default function ServicioForaneo() {
 
         <div className="flex flex-wrap gap-3">
           <button type="submit" disabled={estadoEnvio.guardando} className="px-4 py-2 bg-sieeg text-white rounded hover:bg-blue-700 disabled:opacity-60">
-            {estadoEnvio.guardando ? 'Guardando...' : 'Guardar en API'}
+            {estadoEnvio.guardando ? 'Guardando...' : 'Guardar orden de servicio'}
           </button>
           <button
             type="button"
