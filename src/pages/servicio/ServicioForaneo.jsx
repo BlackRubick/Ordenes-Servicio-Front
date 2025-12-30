@@ -77,10 +77,7 @@ export default function ServicioForaneo() {
           direccion: cliente.direccion,
           telefono: cliente.telefono,
         },
-        trabajosRealizados: {
-          tipo: 'servicio-foraneo',
-          registros,
-        },
+        trabajosRealizados: registros,
         comentarios: 'Servicio foraneo (formulario rapido)',
       }
 

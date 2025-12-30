@@ -5,6 +5,12 @@ import { downloadOrdenPDF, generateOrdenPDF, printOrdenPDF, printOrdenTicketPDF 
 import { getProducts } from '../../services/woocommerce.service'
 import { useAuth } from '../../context/AuthContext'
 
+function normalizeTrabajos(value) {
+  if (Array.isArray(value)) return value
+  if (value && Array.isArray(value.registros)) return value.registros
+  return []
+}
+
 export default function OrdenDetalle() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -29,10 +35,12 @@ export default function OrdenDetalle() {
 
   async function load() {
     const o = await storageService.getOrdenById(id)
-    setOrden(o)
+    const normalizedTrabajos = normalizeTrabajos(o.trabajosRealizados)
+    const normalizedOrden = { ...o, trabajosRealizados: normalizedTrabajos }
+    setOrden(normalizedOrden)
     setForm({
       diagnostico: o.diagnostico || '',
-      trabajosRealizados: o.trabajosRealizados || [],
+      trabajosRealizados: normalizedTrabajos,
       piezasUsadas: o.piezasUsadas || [],
       costoTotal: o.costoTotal || 0,
       fechaEstimada: o.fechaEstimada || '',
@@ -75,6 +83,7 @@ export default function OrdenDetalle() {
   const { user } = useAuth()
   const canEdit = user?.rol === 'admin' && orden?.estado !== 'Cancelado'
   const canSign = user?.rol === 'admin' || (user?.rol === 'tecnico' && orden?.tecnicoUid === user.uid)
+  const trabajosView = normalizeTrabajos(canEdit ? form.trabajosRealizados : orden?.trabajosRealizados)
 
   useEffect(() => {
     if (!loading && user && user.rol === 'tecnico') {
@@ -670,7 +679,7 @@ export default function OrdenDetalle() {
           )}
         </div>
         <div className="space-y-3">
-          {(form.trabajosRealizados||[]).length === 0 && (orden.trabajosRealizados||[]).length === 0 ? (
+          {trabajosView.length === 0 ? (
             <div className="text-center py-8 text-gray-400">
               <svg className="w-16 h-16 mx-auto mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
@@ -678,12 +687,12 @@ export default function OrdenDetalle() {
               No hay trabajos registrados
             </div>
           ) : (
-            (canEdit ? (form.trabajosRealizados||[]) : (orden.trabajosRealizados||[])).map((t, idx) => (
+            trabajosView.map((t, idx) => (
               <div key={idx} className="flex gap-3 items-center">
                 {canEdit ? (
                   <>
                     <input 
-                      value={t} 
+                      value={typeof t === 'string' ? t : JSON.stringify(t)} 
                       onChange={(e)=>updateTrabajo(idx, e.target.value)} 
                       className="flex-1 p-3 border-2 border-gray-300 rounded-lg focus:border-[#0078ff] focus:ring-2 focus:ring-blue-200 transition-all"
                       placeholder="Describe el trabajo realizado..."
@@ -696,7 +705,7 @@ export default function OrdenDetalle() {
                     </button>
                   </>
                 ) : (
-                  <div className="flex-1 p-3 border-2 border-gray-200 rounded-lg bg-gray-50">{t}</div>
+                  <div className="flex-1 p-3 border-2 border-gray-200 rounded-lg bg-gray-50">{typeof t === 'string' ? t : JSON.stringify(t)}</div>
                 )}
               </div>
             ))
