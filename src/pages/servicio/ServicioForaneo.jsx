@@ -87,7 +87,9 @@ export default function ServicioForaneo() {
       const created = await storageService.createOrden(payload)
       setEstadoEnvio({ guardando: false, folio: created?.folio || folio, error: '' })
     } catch (err) {
-      const message = err?.response?.data?.message || err?.message || 'Error al guardar'
+      const message = err?.response?.status === 401
+        ? 'Sesión expirada, vuelve a iniciar sesión.'
+        : err?.response?.data?.message || err?.message || 'Error al guardar'
       setEstadoEnvio({ guardando: false, folio: '', error: message })
     }
   }

@@ -3,8 +3,22 @@ import { generateFolio } from '../utils/folio'
 
 class StorageService {
   async getOrdenes() {
-    const res = await api.get('/api/ordenes')
-    return res.data || []
+    try {
+      const res = await api.get('/api/ordenes')
+      const data = res.data
+      return Array.isArray(data) ? data : []
+    } catch (err) {
+      if (err?.response?.status === 401) {
+        try {
+          localStorage.removeItem('sieeg_session')
+          localStorage.removeItem('sieeg_token')
+        } catch (e) {}
+        // Forzar re-login si el token expira
+        try { window.location.replace('/login') } catch (e) {}
+        return []
+      }
+      throw err
+    }
   }
 
   async getOrdenById(id) {
@@ -34,8 +48,21 @@ class StorageService {
   }
 
   async getOrdenesEliminadas() {
-    const res = await api.get('/api/ordenes/eliminadas')
-    return res.data || []
+    try {
+      const res = await api.get('/api/ordenes/eliminadas')
+      const data = res.data
+      return Array.isArray(data) ? data : []
+    } catch (err) {
+      if (err?.response?.status === 401) {
+        try {
+          localStorage.removeItem('sieeg_session')
+          localStorage.removeItem('sieeg_token')
+        } catch (e) {}
+        try { window.location.replace('/login') } catch (e) {}
+        return []
+      }
+      throw err
+    }
   }
 
   async restoreOrden(id) {
