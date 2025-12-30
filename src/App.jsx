@@ -11,6 +11,7 @@ import PdfPreview from './pages/ordenes/PdfPreview'
 import DownloadUpload from './pages/download/DownloadUpload'
 import TecnicosPage from './pages/tecnicos/Tecnicos'
 import ProductsPage from './pages/products/Products'
+import ServicioForaneo from './pages/servicio/ServicioForaneo'
 import { useAuth } from './context/AuthContext'
 import Header from './components/layout/Header'
 
@@ -87,6 +88,10 @@ export default function App() {
         <Route
           path="/productos"
           element={<Protected><ProductsPage /></Protected>}
+        />
+        <Route
+          path="/servicio-foraneo"
+          element={<Protected><ServicioForaneo /></Protected>}
         />
         {/* Public local download route for uploads saved in IndexedDB */}
         <Route path="/download/:uploadId" element={<DownloadUpload />} />

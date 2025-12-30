@@ -35,6 +35,7 @@ export default function Header() {
           {user && user.rol === 'admin' && (
             <Link to="/tecnicos" className="text-gray-600 hover:text-sieeg">Técnicos</Link>
           )}
+          <Link to="/servicio-foraneo" className="text-gray-600 hover:text-sieeg">Servicio foráneo</Link>
         </nav>
 
         <div className="flex items-center justify-end gap-3">
@@ -105,6 +106,7 @@ export default function Header() {
             {user && user.rol === 'admin' && (
               <Link onClick={() => setMobileOpen(false)} to="/tecnicos" className="py-2 px-2 rounded hover:bg-gray-50">Técnicos</Link>
             )}
+            <Link onClick={() => setMobileOpen(false)} to="/servicio-foraneo" className="py-2 px-2 rounded hover:bg-gray-50">Servicio foráneo</Link>
           </div>
         </div>
       </div>
