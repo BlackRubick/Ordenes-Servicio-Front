@@ -734,7 +734,7 @@ async function generateOrdenForaneoPDF(orden, doc, pageWidth, margin) {
     
     // ===== FILTROS (Badge mejorado) =====
     const filtroSI = row.limpiezaFiltros === 'SI'
-    doc.setFillColor(filtroSI ? 34, 197, 94 : 229, 68, 68)  // Verde o rojo
+    doc.setFillColor(...(filtroSI ? [34, 197, 94] : [229, 68, 68]))  // Verde o rojo
     const badgeW = colWidths[1] - 4
     const badgeH = rowHeight - 4
     doc.roundedRect(xPos + 2, yFoneo + 2, badgeW, badgeH, 2, 2, 'F')
@@ -749,7 +749,7 @@ async function generateOrdenForaneoPDF(orden, doc, pageWidth, margin) {
     
     // ===== CONDENSADORA (Badge mejorado) =====
     const condSI = row.limpiezaCondensadora === 'SI'
-    doc.setFillColor(condSI ? 34, 197, 94 : 229, 68, 68)
+    doc.setFillColor(...(condSI ? [34, 197, 94] : [229, 68, 68]))
     doc.roundedRect(xPos + 2, yFoneo + 2, badgeW - 8, badgeH, 2, 2, 'F')
     doc.setTextColor(255, 255, 255)
     doc.setFont('helvetica', 'bold')
@@ -766,7 +766,7 @@ async function generateOrdenForaneoPDF(orden, doc, pageWidth, margin) {
     
     // ===== EVAPORADORA (Badge mejorado) =====
     const evapSI = row.limpiezaEvaporadora === 'SI'
-    doc.setFillColor(evapSI ? 34, 197, 94 : 229, 68, 68)
+    doc.setFillColor(...(evapSI ? [34, 197, 94] : [229, 68, 68]))
     doc.roundedRect(xPos + 2, yFoneo + 2, badgeW - 8, badgeH, 2, 2, 'F')
     doc.setTextColor(255, 255, 255)
     doc.setFont('helvetica', 'bold')
