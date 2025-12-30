@@ -681,37 +681,42 @@ async function generateOrdenForaneoPDF(orden, doc, pageWidth, margin) {
   
   yFoneo = 90
   
-  // ===== TABLA MEJORADA Y PROFESIONAL =====
-  const colWidths = [75, 30, 38, 35, 38, 40, 70]
-  const colNames = ['ÁREA', '✓ Filtros', '✓ Cond.', 'PSI', '✓ Evap.', 'Elect.', 'Notas']
+// ===== TABLA MEJORADA Y PROFESIONAL =====
+  const colWidths = [90, 35, 35, 30, 35, 45, 90]
+  const colNames = ['ÁREA', 'Filtros', 'Cond.', 'PSI', 'Evap.', 'Eléct.', 'Observaciones']
   let xPos = margin
   
   // Header con gradiente simulado
-  doc.setFillColor(8, 145, 178)  // Azul profesional
-  doc.rect(margin, yFoneo, pageWidth - 2 * margin, 18, 'F')
+  doc.setFillColor(8, 145, 178)
+  doc.rect(margin, yFoneo, pageWidth - 2 * margin, 20, 'F')
   
   doc.setTextColor(255, 255, 255)
   doc.setFont('helvetica', 'bold')
-  doc.setFontSize(9)
+  doc.setFontSize(9.5)
   
   colNames.forEach((name, idx) => {
     const colX = margin + colWidths.slice(0, idx).reduce((a, b) => a + b, 0)
-    doc.text(name, colX + 3, yFoneo + 12, { maxWidth: colWidths[idx] - 6 })
+    // Centrar headers excepto ÁREA y Observaciones
+    if (idx === 0 || idx === 6) {
+      doc.text(name, colX + 4, yFoneo + 13)
+    } else {
+      doc.text(name, colX + colWidths[idx] / 2, yFoneo + 13, { align: 'center' })
+    }
   })
   
-  yFoneo += 18
+  yFoneo += 20
   
   // Tabla filas mejorada
   doc.setTextColor(40, 40, 40)
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(8.5)
   
-  const rowHeight = 16
+  const rowHeight = 18
   
   orden.trabajosRealizados.forEach((row, idx) => {
-    // Fondo alternado más elegante
+    // Fondo alternado
     if (idx % 2 === 0) {
-      doc.setFillColor(245, 248, 250)  // Azul muy claro
+      doc.setFillColor(245, 248, 250)
     } else {
       doc.setFillColor(255, 255, 255)
     }
@@ -719,104 +724,104 @@ async function generateOrdenForaneoPDF(orden, doc, pageWidth, margin) {
     
     // Línea divisora sutil
     doc.setDrawColor(200, 210, 220)
-    doc.setLineWidth(0.4)
+    doc.setLineWidth(0.3)
     doc.line(margin, yFoneo + rowHeight, pageWidth - margin, yFoneo + rowHeight)
     
     xPos = margin
     
-    // ===== ÁREA (sin borde, texto destacado) =====
+    // ===== ÁREA =====
     doc.setFont('helvetica', 'bold')
     doc.setTextColor(8, 145, 178)
-    doc.text(String(row.area || '-'), xPos + 3, yFoneo + 11, { maxWidth: colWidths[0] - 6 })
+    doc.setFontSize(9)
+    doc.text(String(row.area || '-'), xPos + 4, yFoneo + 12, { maxWidth: colWidths[0] - 8 })
     doc.setFont('helvetica', 'normal')
     doc.setTextColor(40, 40, 40)
+    doc.setFontSize(8.5)
     xPos += colWidths[0]
     
-    // ===== FILTROS (Badge mejorado) =====
+    // ===== FILTROS - Badge centrado =====
     const filtroSI = row.limpiezaFiltros === 'SI'
-    doc.setFillColor(...(filtroSI ? [34, 197, 94] : [229, 68, 68]))  // Verde o rojo
-    const badgeW = colWidths[1] - 4
-    const badgeH = rowHeight - 4
-    doc.roundedRect(xPos + 2, yFoneo + 2, badgeW, badgeH, 2, 2, 'F')
+    const badgeW = 20
+    const badgeH = 11
+    const badgeY = yFoneo + (rowHeight - badgeH) / 2
+    
+    const filtroX = xPos + (colWidths[1] - badgeW) / 2
+    doc.setFillColor(...(filtroSI ? [34, 197, 94] : [239, 68, 68]))
+    doc.roundedRect(filtroX, badgeY, badgeW, badgeH, 2, 2, 'F')
     doc.setTextColor(255, 255, 255)
     doc.setFont('helvetica', 'bold')
-    doc.setFontSize(8)
-    doc.text(filtroSI ? '✓' : '✗', xPos + colWidths[1]/2 - 1.5, yFoneo + 10.5)
-    doc.setFontSize(8.5)
-    doc.setTextColor(40, 40, 40)
-    doc.setFont('helvetica', 'normal')
+    doc.setFontSize(9)
+    doc.text(filtroSI ? '✓' : '✗', filtroX + badgeW / 2, badgeY + 8, { align: 'center' })
     xPos += colWidths[1]
     
-    // ===== CONDENSADORA (Badge mejorado) =====
+    // ===== CONDENSADORA - Badge centrado =====
     const condSI = row.limpiezaCondensadora === 'SI'
-    doc.setFillColor(...(condSI ? [34, 197, 94] : [229, 68, 68]))
-    doc.roundedRect(xPos + 2, yFoneo + 2, badgeW - 8, badgeH, 2, 2, 'F')
+    const condX = xPos + (colWidths[2] - badgeW) / 2
+    doc.setFillColor(...(condSI ? [34, 197, 94] : [239, 68, 68]))
+    doc.roundedRect(condX, badgeY, badgeW, badgeH, 2, 2, 'F')
     doc.setTextColor(255, 255, 255)
-    doc.setFont('helvetica', 'bold')
-    doc.setFontSize(8)
-    doc.text(condSI ? '✓' : '✗', xPos + (colWidths[2] - 8)/2 - 1.5, yFoneo + 10.5)
-    doc.setFontSize(8.5)
-    doc.setTextColor(40, 40, 40)
-    doc.setFont('helvetica', 'normal')
+    doc.text(condSI ? '✓' : '✗', condX + badgeW / 2, badgeY + 8, { align: 'center' })
     xPos += colWidths[2]
     
-    // ===== PRESIÓN GAS (centrado) =====
-    doc.text(String(row.presionGas || '-'), xPos + colWidths[3]/2 - 5, yFoneo + 11, { align: 'center' })
+    // ===== PRESIÓN GAS - centrado =====
+    doc.setTextColor(40, 40, 40)
+    doc.setFont('helvetica', 'normal')
+    doc.setFontSize(9)
+    doc.text(String(row.presionGas || '-'), xPos + colWidths[3] / 2, yFoneo + 12, { align: 'center' })
     xPos += colWidths[3]
     
-    // ===== EVAPORADORA (Badge mejorado) =====
+    // ===== EVAPORADORA - Badge centrado =====
     const evapSI = row.limpiezaEvaporadora === 'SI'
-    doc.setFillColor(...(evapSI ? [34, 197, 94] : [229, 68, 68]))
-    doc.roundedRect(xPos + 2, yFoneo + 2, badgeW - 8, badgeH, 2, 2, 'F')
+    const evapX = xPos + (colWidths[4] - badgeW) / 2
+    doc.setFillColor(...(evapSI ? [34, 197, 94] : [239, 68, 68]))
+    doc.roundedRect(evapX, badgeY, badgeW, badgeH, 2, 2, 'F')
     doc.setTextColor(255, 255, 255)
-    doc.setFont('helvetica', 'bold')
-    doc.setFontSize(8)
-    doc.text(evapSI ? '✓' : '✗', xPos + (colWidths[4] - 8)/2 - 1.5, yFoneo + 10.5)
-    doc.setFontSize(8.5)
-    doc.setTextColor(40, 40, 40)
-    doc.setFont('helvetica', 'normal')
+    doc.text(evapSI ? '✓' : '✗', evapX + badgeW / 2, badgeY + 8, { align: 'center' })
     xPos += colWidths[4]
     
-    // ===== REVISIÓN ELÉCTRICA (indicador) =====
+    // ===== REVISIÓN ELÉCTRICA - centrado con color =====
     const elecValue = String(row.revisionElectrica || '-')
-    const elecColor = elecValue === 'OK' ? [34, 197, 94] : elecValue === 'Pendiente' ? [251, 191, 36] : [200, 200, 200]
+    const elecColor = elecValue === 'OK' ? [34, 197, 94] : elecValue === 'Pendiente' ? [251, 191, 36] : [100, 100, 100]
     doc.setTextColor(...elecColor)
     doc.setFont('helvetica', elecValue !== '-' ? 'bold' : 'normal')
-    doc.text(elecValue, xPos + 3, yFoneo + 11, { maxWidth: colWidths[5] - 6 })
-    doc.setTextColor(40, 40, 40)
-    doc.setFont('helvetica', 'normal')
+    doc.setFontSize(8.5)
+    doc.text(elecValue, xPos + colWidths[5] / 2, yFoneo + 12, { align: 'center' })
     xPos += colWidths[5]
     
-    // ===== OBSERVACIONES (italic si tiene contenido) =====
+    // ===== OBSERVACIONES =====
     const obsValue = String(row.observaciones || '-')
-    if (obsValue !== '-') {
-      doc.setFont('helvetica', 'italic')
-      doc.setTextColor(100, 100, 100)
-    } else {
-      doc.setTextColor(180, 180, 180)
-    }
-    doc.text(obsValue, xPos + 3, yFoneo + 11, { maxWidth: colWidths[6] - 6 })
+    doc.setTextColor(obsValue !== '-' ? 60 : 180, obsValue !== '-' ? 60 : 180, obsValue !== '-' ? 60 : 180)
+    doc.setFont('helvetica', obsValue !== '-' ? 'italic' : 'normal')
+    doc.setFontSize(8)
+    doc.text(obsValue, xPos + 4, yFoneo + 12, { maxWidth: colWidths[6] - 8 })
+    
+    // Reset estilos
     doc.setTextColor(40, 40, 40)
     doc.setFont('helvetica', 'normal')
+    doc.setFontSize(8.5)
     
     yFoneo += rowHeight
     
     // Evitar overflow de página
-    if (yFoneo > 720) {
+    if (yFoneo > 715) {
       doc.addPage()
       yFoneo = 40
       
       // Repetir header
       doc.setFillColor(8, 145, 178)
-      doc.rect(margin, yFoneo, pageWidth - 2 * margin, 18, 'F')
+      doc.rect(margin, yFoneo, pageWidth - 2 * margin, 20, 'F')
       doc.setTextColor(255, 255, 255)
       doc.setFont('helvetica', 'bold')
-      doc.setFontSize(9)
+      doc.setFontSize(9.5)
       colNames.forEach((name, i) => {
         const colX = margin + colWidths.slice(0, i).reduce((a, b) => a + b, 0)
-        doc.text(name, colX + 3, yFoneo + 12, { maxWidth: colWidths[i] - 6 })
+        if (i === 0 || i === 6) {
+          doc.text(name, colX + 4, yFoneo + 13)
+        } else {
+          doc.text(name, colX + colWidths[i] / 2, yFoneo + 13, { align: 'center' })
+        }
       })
-      yFoneo += 18
+      yFoneo += 20
       
       doc.setTextColor(40, 40, 40)
       doc.setFont('helvetica', 'normal')
