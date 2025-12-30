@@ -11,6 +11,12 @@ function normalizeTrabajos(value) {
   return []
 }
 
+function isServicioForaneo(trabajos) {
+  if (!Array.isArray(trabajos) || trabajos.length === 0) return false
+  const first = trabajos[0]
+  return first && typeof first === 'object' && ('area' in first || 'presionGas' in first || 'limpiezaFiltros' in first)
+}
+
 export default function OrdenDetalle() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -656,62 +662,104 @@ export default function OrdenDetalle() {
         )}
       </div>
 
-      {/* Trabajos realizados */}
-      <div className="bg-white rounded-xl shadow-lg p-6 mb-6 border-l-4 border-[#0078ff]">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-            <svg className="w-6 h-6 text-[#0078ff]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-            Trabajos realizados
-          </h3>
-          {canEdit && (
-            <button 
-              onClick={addTrabajo} 
-              className="px-4 py-2 bg-[#0078ff] text-white rounded-lg hover:bg-[#0066dd] transition-colors font-semibold text-sm flex items-center gap-2"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+      {/* Trabajos realizados o Servicio Foráneo */}
+      {isServicioForaneo(trabajosView) ? (
+        <div className="bg-white rounded-xl shadow-lg p-6 mb-6 border-l-4 border-cyan-500">
+          <div className="mb-4">
+            <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2 mb-2">
+              <svg className="w-6 h-6 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
               </svg>
-              Agregar
-            </button>
-          )}
+              Bitácora de Mantenimiento (Servicio Foráneo)
+            </h3>
+            <p className="text-sm text-gray-600">Registro de mantenimiento preventivo de aire acondicionado</p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs border">
+              <thead>
+                <tr className="bg-slate-100">
+                  <th className="border px-2 py-2 text-left font-semibold text-gray-700">Área</th>
+                  <th className="border px-2 py-2 text-center font-semibold text-gray-700">Filtros</th>
+                  <th className="border px-2 py-2 text-center font-semibold text-gray-700">Condensadora</th>
+                  <th className="border px-2 py-2 text-center font-semibold text-gray-700">Presión Gas</th>
+                  <th className="border px-2 py-2 text-center font-semibold text-gray-700">Evaporadora</th>
+                  <th className="border px-2 py-2 text-center font-semibold text-gray-700">Revisión Eléctrica</th>
+                  <th className="border px-2 py-2 text-left font-semibold text-gray-700">Observaciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {trabajosView.map((row, idx) => (
+                  <tr key={idx} className={idx % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
+                    <td className="border px-2 py-2 font-semibold text-gray-700">{row.area || '-'}</td>
+                    <td className="border px-2 py-2 text-center"><span className={`inline-block px-2 py-1 rounded text-xs font-bold ${row.limpiezaFiltros === 'SI' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>{row.limpiezaFiltros || '-'}</span></td>
+                    <td className="border px-2 py-2 text-center"><span className={`inline-block px-2 py-1 rounded text-xs font-bold ${row.limpiezaCondensadora === 'SI' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>{row.limpiezaCondensadora || '-'}</span></td>
+                    <td className="border px-2 py-2 text-center font-mono text-gray-700">{row.presionGas || '-'}</td>
+                    <td className="border px-2 py-2 text-center"><span className={`inline-block px-2 py-1 rounded text-xs font-bold ${row.limpiezaEvaporadora === 'SI' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>{row.limpiezaEvaporadora || '-'}</span></td>
+                    <td className="border px-2 py-2 text-xs text-gray-700">{row.revisionElectrica || '-'}</td>
+                    <td className="border px-2 py-2 text-gray-700 font-semibold">{row.observaciones || '-'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
-        <div className="space-y-3">
-          {trabajosView.length === 0 ? (
-            <div className="text-center py-8 text-gray-400">
-              <svg className="w-16 h-16 mx-auto mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+      ) : (
+        <div className="bg-white rounded-xl shadow-lg p-6 mb-6 border-l-4 border-[#0078ff]">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+              <svg className="w-6 h-6 text-[#0078ff]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
-              No hay trabajos registrados
-            </div>
-          ) : (
-            trabajosView.map((t, idx) => (
-              <div key={idx} className="flex gap-3 items-center">
-                {canEdit ? (
-                  <>
-                    <input 
-                      value={typeof t === 'string' ? t : JSON.stringify(t)} 
-                      onChange={(e)=>updateTrabajo(idx, e.target.value)} 
-                      className="flex-1 p-3 border-2 border-gray-300 rounded-lg focus:border-[#0078ff] focus:ring-2 focus:ring-blue-200 transition-all"
-                      placeholder="Describe el trabajo realizado..."
-                    />
-                    <button 
-                      onClick={()=>removeTrabajo(idx)} 
-                      className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-semibold"
-                    >
-                      Eliminar
-                    </button>
-                  </>
-                ) : (
-                  <div className="flex-1 p-3 border-2 border-gray-200 rounded-lg bg-gray-50">{typeof t === 'string' ? t : JSON.stringify(t)}</div>
-                )}
+              Trabajos realizados
+            </h3>
+            {canEdit && (
+              <button 
+                onClick={addTrabajo} 
+                className="px-4 py-2 bg-[#0078ff] text-white rounded-lg hover:bg-[#0066dd] transition-colors font-semibold text-sm flex items-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                Agregar
+              </button>
+            )}
+          </div>
+          <div className="space-y-3">
+            {trabajosView.length === 0 ? (
+              <div className="text-center py-8 text-gray-400">
+                <svg className="w-16 h-16 mx-auto mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+                No hay trabajos registrados
               </div>
-            ))
-          )}
+            ) : (
+              trabajosView.map((t, idx) => (
+                <div key={idx} className="flex gap-3 items-center">
+                  {canEdit ? (
+                    <>
+                      <input 
+                        value={typeof t === 'string' ? t : JSON.stringify(t)} 
+                        onChange={(e)=>updateTrabajo(idx, e.target.value)} 
+                        className="flex-1 p-3 border-2 border-gray-300 rounded-lg focus:border-[#0078ff] focus:ring-2 focus:ring-blue-200 transition-all"
+                        placeholder="Describe el trabajo realizado..."
+                      />
+                      <button 
+                        onClick={()=>removeTrabajo(idx)} 
+                        className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-semibold"
+                      >
+                        Eliminar
+                      </button>
+                    </>
+                  ) : (
+                    <div className="flex-1 p-3 border-2 border-gray-200 rounded-lg bg-gray-50">{typeof t === 'string' ? t : JSON.stringify(t)}</div>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Piezas usadas */}
       <div className="bg-white rounded-xl shadow-lg p-6 mb-6 border-l-4 border-[#0078ff]">
