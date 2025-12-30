@@ -681,97 +681,123 @@ async function generateOrdenForaneoPDF(orden, doc, pageWidth, margin) {
   
   yFoneo = 90
   
-  // Tabla header
-  const colWidths = [70, 35, 45, 40, 45, 45, 70]
-  const colNames = ['Área', 'Filtros', 'Condensadora', 'Presión Gas', 'Evaporadora', 'Revisión Elect.', 'Observaciones']
+  // ===== TABLA MEJORADA Y PROFESIONAL =====
+  const colWidths = [75, 30, 38, 35, 38, 40, 70]
+  const colNames = ['ÁREA', '✓ Filtros', '✓ Cond.', 'PSI', '✓ Evap.', 'Elect.', 'Notas']
   let xPos = margin
   
-  doc.setFillColor(0, 184, 148)
+  // Header con gradiente simulado
+  doc.setFillColor(8, 145, 178)  // Azul profesional
+  doc.rect(margin, yFoneo, pageWidth - 2 * margin, 18, 'F')
+  
   doc.setTextColor(255, 255, 255)
   doc.setFont('helvetica', 'bold')
-  doc.setFontSize(8)
+  doc.setFontSize(9)
   
   colNames.forEach((name, idx) => {
-    doc.rect(xPos, yFoneo, colWidths[idx], 12, 'F')
-    doc.text(name, xPos + 2, yFoneo + 8, { maxWidth: colWidths[idx] - 4 })
-    xPos += colWidths[idx]
+    const colX = margin + colWidths.slice(0, idx).reduce((a, b) => a + b, 0)
+    doc.text(name, colX + 3, yFoneo + 12, { maxWidth: colWidths[idx] - 6 })
   })
   
-  yFoneo += 12
+  yFoneo += 18
   
-  // Tabla filas
-  doc.setTextColor(0, 0, 0)
+  // Tabla filas mejorada
+  doc.setTextColor(40, 40, 40)
   doc.setFont('helvetica', 'normal')
-  doc.setFontSize(8)
+  doc.setFontSize(8.5)
+  
+  const rowHeight = 16
   
   orden.trabajosRealizados.forEach((row, idx) => {
-    // Fondo alternado
+    // Fondo alternado más elegante
     if (idx % 2 === 0) {
-      doc.setFillColor(248, 250, 252)
-      doc.rect(margin, yFoneo, pageWidth - 2 * margin, 14, 'F')
+      doc.setFillColor(245, 248, 250)  // Azul muy claro
+    } else {
+      doc.setFillColor(255, 255, 255)
     }
+    doc.rect(margin, yFoneo, pageWidth - 2 * margin, rowHeight, 'F')
     
-    // Bordes
-    doc.setDrawColor(200, 200, 200)
-    doc.setLineWidth(0.5)
+    // Línea divisora sutil
+    doc.setDrawColor(200, 210, 220)
+    doc.setLineWidth(0.4)
+    doc.line(margin, yFoneo + rowHeight, pageWidth - margin, yFoneo + rowHeight)
     
     xPos = margin
-    const rowHeight = 14
     
-    // Área
-    doc.rect(xPos, yFoneo, colWidths[0], rowHeight)
-    doc.text(String(row.area || '-'), xPos + 2, yFoneo + 7, { maxWidth: colWidths[0] - 4 })
+    // ===== ÁREA (sin borde, texto destacado) =====
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(8, 145, 178)
+    doc.text(String(row.area || '-'), xPos + 3, yFoneo + 11, { maxWidth: colWidths[0] - 6 })
+    doc.setFont('helvetica', 'normal')
+    doc.setTextColor(40, 40, 40)
     xPos += colWidths[0]
     
-    // Filtros - Badge
-    doc.rect(xPos, yFoneo, colWidths[1], rowHeight)
-    const filtroColor = row.limpiezaFiltros === 'SI' ? [34, 197, 94] : [239, 68, 68]
-    doc.setFillColor(...filtroColor)
-    doc.rect(xPos + 2, yFoneo + 2, colWidths[1] - 4, rowHeight - 4, 'F')
+    // ===== FILTROS (Badge mejorado) =====
+    const filtroSI = row.limpiezaFiltros === 'SI'
+    doc.setFillColor(filtroSI ? 34, 197, 94 : 229, 68, 68)  // Verde o rojo
+    const badgeW = colWidths[1] - 4
+    const badgeH = rowHeight - 4
+    doc.roundedRect(xPos + 2, yFoneo + 2, badgeW, badgeH, 2, 2, 'F')
     doc.setTextColor(255, 255, 255)
     doc.setFont('helvetica', 'bold')
-    doc.text(String(row.limpiezaFiltros || '-'), xPos + colWidths[1]/2 - 3, yFoneo + 7)
-    doc.setTextColor(0, 0, 0)
+    doc.setFontSize(8)
+    doc.text(filtroSI ? '✓' : '✗', xPos + colWidths[1]/2 - 1.5, yFoneo + 10.5)
+    doc.setFontSize(8.5)
+    doc.setTextColor(40, 40, 40)
     doc.setFont('helvetica', 'normal')
     xPos += colWidths[1]
     
-    // Condensadora - Badge
-    doc.rect(xPos, yFoneo, colWidths[2], rowHeight)
-    const condColor = row.limpiezaCondensadora === 'SI' ? [34, 197, 94] : [239, 68, 68]
-    doc.setFillColor(...condColor)
-    doc.rect(xPos + 2, yFoneo + 2, colWidths[2] - 4, rowHeight - 4, 'F')
+    // ===== CONDENSADORA (Badge mejorado) =====
+    const condSI = row.limpiezaCondensadora === 'SI'
+    doc.setFillColor(condSI ? 34, 197, 94 : 229, 68, 68)
+    doc.roundedRect(xPos + 2, yFoneo + 2, badgeW - 8, badgeH, 2, 2, 'F')
     doc.setTextColor(255, 255, 255)
     doc.setFont('helvetica', 'bold')
-    doc.text(String(row.limpiezaCondensadora || '-'), xPos + colWidths[2]/2 - 3, yFoneo + 7)
-    doc.setTextColor(0, 0, 0)
+    doc.setFontSize(8)
+    doc.text(condSI ? '✓' : '✗', xPos + (colWidths[2] - 8)/2 - 1.5, yFoneo + 10.5)
+    doc.setFontSize(8.5)
+    doc.setTextColor(40, 40, 40)
     doc.setFont('helvetica', 'normal')
     xPos += colWidths[2]
     
-    // Presión Gas
-    doc.rect(xPos, yFoneo, colWidths[3], rowHeight)
-    doc.text(String(row.presionGas || '-'), xPos + 2, yFoneo + 7, { maxWidth: colWidths[3] - 4 })
+    // ===== PRESIÓN GAS (centrado) =====
+    doc.text(String(row.presionGas || '-'), xPos + colWidths[3]/2 - 5, yFoneo + 11, { align: 'center' })
     xPos += colWidths[3]
     
-    // Evaporadora - Badge
-    doc.rect(xPos, yFoneo, colWidths[4], rowHeight)
-    const evapColor = row.limpiezaEvaporadora === 'SI' ? [34, 197, 94] : [239, 68, 68]
-    doc.setFillColor(...evapColor)
-    doc.rect(xPos + 2, yFoneo + 2, colWidths[4] - 4, rowHeight - 4, 'F')
+    // ===== EVAPORADORA (Badge mejorado) =====
+    const evapSI = row.limpiezaEvaporadora === 'SI'
+    doc.setFillColor(evapSI ? 34, 197, 94 : 229, 68, 68)
+    doc.roundedRect(xPos + 2, yFoneo + 2, badgeW - 8, badgeH, 2, 2, 'F')
     doc.setTextColor(255, 255, 255)
     doc.setFont('helvetica', 'bold')
-    doc.text(String(row.limpiezaEvaporadora || '-'), xPos + colWidths[4]/2 - 3, yFoneo + 7)
-    doc.setTextColor(0, 0, 0)
+    doc.setFontSize(8)
+    doc.text(evapSI ? '✓' : '✗', xPos + (colWidths[4] - 8)/2 - 1.5, yFoneo + 10.5)
+    doc.setFontSize(8.5)
+    doc.setTextColor(40, 40, 40)
     doc.setFont('helvetica', 'normal')
     xPos += colWidths[4]
     
-    // Revisión Eléctrica
-    doc.rect(xPos, yFoneo, colWidths[5], rowHeight)
-    doc.text(String(row.revisionElectrica || '-'), xPos + 2, yFoneo + 7, { maxWidth: colWidths[5] - 4, fontSize: 7 })
+    // ===== REVISIÓN ELÉCTRICA (indicador) =====
+    const elecValue = String(row.revisionElectrica || '-')
+    const elecColor = elecValue === 'OK' ? [34, 197, 94] : elecValue === 'Pendiente' ? [251, 191, 36] : [200, 200, 200]
+    doc.setTextColor(...elecColor)
+    doc.setFont('helvetica', elecValue !== '-' ? 'bold' : 'normal')
+    doc.text(elecValue, xPos + 3, yFoneo + 11, { maxWidth: colWidths[5] - 6 })
+    doc.setTextColor(40, 40, 40)
+    doc.setFont('helvetica', 'normal')
     xPos += colWidths[5]
     
-    // Observaciones
-    doc.rect(xPos, yFoneo, colWidths[6], rowHeight)
-    doc.text(String(row.observaciones || '-'), xPos + 2, yFoneo + 7, { maxWidth: colWidths[6] - 4 })
+    // ===== OBSERVACIONES (italic si tiene contenido) =====
+    const obsValue = String(row.observaciones || '-')
+    if (obsValue !== '-') {
+      doc.setFont('helvetica', 'italic')
+      doc.setTextColor(100, 100, 100)
+    } else {
+      doc.setTextColor(180, 180, 180)
+    }
+    doc.text(obsValue, xPos + 3, yFoneo + 11, { maxWidth: colWidths[6] - 6 })
+    doc.setTextColor(40, 40, 40)
+    doc.setFont('helvetica', 'normal')
     
     yFoneo += rowHeight
     
@@ -779,20 +805,22 @@ async function generateOrdenForaneoPDF(orden, doc, pageWidth, margin) {
     if (yFoneo > 720) {
       doc.addPage()
       yFoneo = 40
+      
       // Repetir header
-      doc.setFillColor(0, 184, 148)
+      doc.setFillColor(8, 145, 178)
+      doc.rect(margin, yFoneo, pageWidth - 2 * margin, 18, 'F')
       doc.setTextColor(255, 255, 255)
       doc.setFont('helvetica', 'bold')
-      doc.setFontSize(8)
-      xPos = margin
+      doc.setFontSize(9)
       colNames.forEach((name, i) => {
-        doc.rect(xPos, yFoneo, colWidths[i], 12, 'F')
-        doc.text(name, xPos + 2, yFoneo + 8, { maxWidth: colWidths[i] - 4 })
-        xPos += colWidths[i]
+        const colX = margin + colWidths.slice(0, i).reduce((a, b) => a + b, 0)
+        doc.text(name, colX + 3, yFoneo + 12, { maxWidth: colWidths[i] - 6 })
       })
-      yFoneo += 12
-      doc.setTextColor(0, 0, 0)
+      yFoneo += 18
+      
+      doc.setTextColor(40, 40, 40)
       doc.setFont('helvetica', 'normal')
+      doc.setFontSize(8.5)
     }
   })
   
