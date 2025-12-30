@@ -171,8 +171,16 @@ export async function generateOrdenPDF(orden) {
   const pageWidth = 595
   const margin = 40
   let y = 40
+  
+  // Detectar si es servicio foráneo
+  const esForaneo = isServicioForaneo(orden.trabajosRealizados)
 
-  // ============ PÁGINA 1: ORDEN DE SERVICIO ============
+  // Si es foráneo, generar PDF simplificado
+  if (esForaneo) {
+    return generateOrdenForaneoPDF(orden, doc, pageWidth, margin)
+  }
+
+  // ============ PÁGINA 1: ORDEN DE SERVICIO (NORMAL) ============
   
   // Fondo decorativo sutil en el header
   doc.setFillColor(248, 250, 252)
@@ -550,160 +558,256 @@ export async function generateOrdenPDF(orden) {
   doc.setTextColor(148, 163, 184)
   doc.text('Página 2 de 2', pageWidth - margin - 60, 797)
 
-  // ============ PÁGINA 3: BITÁCORA SI ES FORÁNEO ============
-  if (isServicioForaneo(orden.trabajosRealizados)) {
-    doc.addPage()
+  return doc
+}
+
+// ===== PDF PARA SERVICIO FORÁNEO (SIMPLIFICADO) =====
+async function generateOrdenForaneoPDF(orden, doc, pageWidth, margin) {
+  let y = 40
+  
+  // ============ PÁGINA 1: INFORMACIÓN BÁSICA ============
+  
+  // Fondo decorativo
+  doc.setFillColor(248, 250, 252)
+  doc.rect(0, 0, pageWidth, 110, 'F')
+  
+  // Logo
+  let logoData = null
+  try { logoData = await urlToDataUrl('/sieeg-new.png') } catch (e) {}
+
+  if (logoData) {
+    try {
+      doc.setFillColor(200, 200, 200)
+      doc.roundedRect(margin + 2, y + 2, 105, 55, 4, 4, 'F')
+      doc.setFillColor(255, 255, 255)
+      doc.roundedRect(margin, y, 105, 55, 4, 4, 'F')
+      doc.addImage(logoData, 'PNG', margin + 2.5, y + 2.5, 100, 50)
+    } catch (e) {}
+  }
+
+  // Título
+  doc.setFontSize(20)
+  doc.setFont('helvetica', 'bold')
+  doc.setTextColor(0, 184, 148)
+  doc.setFontSize(10)
+  doc.setFont('helvetica', 'normal')
+  doc.setTextColor(71, 85, 105)
+  doc.text('Servicio Foráneo - Mantenimiento', margin + 120, y + 38)
+  doc.setFontSize(9)
+  doc.setTextColor(100, 116, 139)
+  doc.text('Bitácora de Aire Acondicionado', margin + 120, y + 52)
+  
+  // Caja de folio
+  const infoBoxX = pageWidth - margin - 170
+  doc.setFillColor(220, 220, 220)
+  doc.roundedRect(infoBoxX + 2, y + 2, 170, 58, 6, 6, 'F')
+  doc.setFillColor(255, 255, 255)
+  doc.roundedRect(infoBoxX, y, 170, 58, 6, 6, 'F')
+  doc.setDrawColor(226, 232, 240)
+  doc.setLineWidth(1)
+  doc.roundedRect(infoBoxX, y, 170, 58, 6, 6, 'D')
+  
+  doc.setFontSize(8)
+  doc.setTextColor(100, 116, 139)
+  doc.setFont('helvetica', 'bold')
+  doc.text('FOLIO', infoBoxX + 10, y + 16)
+  
+  doc.setFontSize(18)
+  doc.setTextColor(0, 184, 148)
+  doc.setFont('helvetica', 'bold')
+  doc.text(orden.folio || '—', infoBoxX + 10, y + 36)
+  
+  doc.setFontSize(8.5)
+  doc.setTextColor(100, 116, 139)
+  doc.setFont('helvetica', 'normal')
+  doc.text(orden.fechaIngreso || '—', infoBoxX + 10, y + 50)
+
+  y += 90
+
+  // ===== INFORMACIÓN DEL CLIENTE =====
+  const clientH = 95
+  drawSection(doc, margin, y, pageWidth - 2 * margin, clientH, 'INFORMACIÓN DEL CLIENTE')
+  
+  y += 42
+  drawField(doc, margin + 15, y, 235, 'Nombre completo', orden.cliente?.nombre)
+  drawField(doc, margin + 270, y, 105, 'Teléfono', orden.cliente?.telefono)
+  drawField(doc, margin + 395, y, 115, 'Dirección', orden.cliente?.direccion)
+
+  y += clientH - 8
+
+  // ===== INFORMACIÓN DEL LUGAR (FECHA) =====
+  const ubicH = 60
+  drawSection(doc, margin, y, pageWidth - 2 * margin, ubicH, 'INFORMACIÓN DE SERVICIO')
+  
+  y += 42
+  drawField(doc, margin + 15, y, pageWidth - 2 * margin - 30, 'Fecha de mantenimiento', orden.fechaIngreso)
+
+  y += ubicH - 8
+
+  // Footer
+  doc.setFillColor(248, 250, 252)
+  doc.rect(0, 770, pageWidth, 72, 'F')
+  doc.setFontSize(7.5)
+  doc.setTextColor(100, 116, 139)
+  doc.setFont('helvetica', 'normal')
+  doc.text('Boulevard Belisario Domínguez #4213 L5, Fracc. La Gloria, Tuxtla Gutiérrez, Chiapas', margin, 785)
+  doc.text('Tel: 961 118 0157  •  WhatsApp: 961 333 6529', margin, 797)
+  doc.setFontSize(7)
+  doc.setTextColor(148, 163, 184)
+  doc.text('Página 1 de 2', pageWidth - margin - 60, 797)
+
+  // ============ PÁGINA 2: BITÁCORA DE MANTENIMIENTO ============
+  doc.addPage()
+  
+  // Fondo decorativo
+  doc.setFillColor(248, 250, 252)
+  doc.rect(0, 0, pageWidth, 80, 'F')
+  
+  let yFoneo = 40
+  
+  // Título
+  doc.setFillColor(0, 184, 148)
+  doc.rect(margin - 5, yFoneo - 5, 6, 32, 'F')
+  
+  doc.setFontSize(18)
+  doc.setFont('helvetica', 'bold')
+  doc.setTextColor(0, 184, 148)
+  doc.text('Bitácora de Mantenimiento', margin + 8, yFoneo + 12)
+  
+  doc.setFontSize(9)
+  doc.setTextColor(100, 116, 139)
+  doc.setFont('helvetica', 'normal')
+  doc.text('Registro detallado de revisiones por área', margin + 8, yFoneo + 26)
+  
+  yFoneo = 90
+  
+  // Tabla header
+  const colWidths = [70, 35, 45, 40, 45, 45, 70]
+  const colNames = ['Área', 'Filtros', 'Condensadora', 'Presión Gas', 'Evaporadora', 'Revisión Elect.', 'Observaciones']
+  let xPos = margin
+  
+  doc.setFillColor(0, 184, 148)
+  doc.setTextColor(255, 255, 255)
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(8)
+  
+  colNames.forEach((name, idx) => {
+    doc.rect(xPos, yFoneo, colWidths[idx], 12, 'F')
+    doc.text(name, xPos + 2, yFoneo + 8, { maxWidth: colWidths[idx] - 4 })
+    xPos += colWidths[idx]
+  })
+  
+  yFoneo += 12
+  
+  // Tabla filas
+  doc.setTextColor(0, 0, 0)
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(8)
+  
+  orden.trabajosRealizados.forEach((row, idx) => {
+    // Fondo alternado
+    if (idx % 2 === 0) {
+      doc.setFillColor(248, 250, 252)
+      doc.rect(margin, yFoneo, pageWidth - 2 * margin, 14, 'F')
+    }
     
-    // Fondo decorativo
-    doc.setFillColor(248, 250, 252)
-    doc.rect(0, 0, pageWidth, 80, 'F')
+    // Bordes
+    doc.setDrawColor(200, 200, 200)
+    doc.setLineWidth(0.5)
     
-    let yFoneo = 40
+    xPos = margin
+    const rowHeight = 14
     
-    // Título
-    doc.setFillColor(0, 184, 148)
-    doc.rect(margin - 5, yFoneo - 5, 6, 32, 'F')
+    // Área
+    doc.rect(xPos, yFoneo, colWidths[0], rowHeight)
+    doc.text(String(row.area || '-'), xPos + 2, yFoneo + 7, { maxWidth: colWidths[0] - 4 })
+    xPos += colWidths[0]
     
-    doc.setFontSize(18)
-    doc.setFont('helvetica', 'bold')
-    doc.setTextColor(0, 184, 148)
-    doc.text('Bitácora de Mantenimiento', margin + 8, yFoneo + 12)
-    
-    doc.setFontSize(9)
-    doc.setTextColor(100, 116, 139)
-    doc.setFont('helvetica', 'normal')
-    doc.text('Servicio Foráneo - Mantenimiento Preventivo de Aire Acondicionado', margin + 8, yFoneo + 26)
-    
-    yFoneo = 90
-    
-    // Tabla header
-    const colWidths = [70, 35, 45, 40, 45, 45, 70]
-    const colNames = ['Área', 'Filtros', 'Condensadora', 'Presión Gas', 'Evaporadora', 'Revisión Elect.', 'Observaciones']
-    let xPos = margin
-    
-    doc.setFillColor(30, 64, 175)
+    // Filtros - Badge
+    doc.rect(xPos, yFoneo, colWidths[1], rowHeight)
+    const filtroColor = row.limpiezaFiltros === 'SI' ? [34, 197, 94] : [239, 68, 68]
+    doc.setFillColor(...filtroColor)
+    doc.rect(xPos + 2, yFoneo + 2, colWidths[1] - 4, rowHeight - 4, 'F')
     doc.setTextColor(255, 255, 255)
     doc.setFont('helvetica', 'bold')
-    doc.setFontSize(8)
-    
-    colNames.forEach((name, idx) => {
-      doc.rect(xPos, yFoneo, colWidths[idx], 12, 'F')
-      doc.text(name, xPos + 2, yFoneo + 8, { maxWidth: colWidths[idx] - 4 })
-      xPos += colWidths[idx]
-    })
-    
-    yFoneo += 12
-    
-    // Tabla filas
+    doc.text(String(row.limpiezaFiltros || '-'), xPos + colWidths[1]/2 - 3, yFoneo + 7)
     doc.setTextColor(0, 0, 0)
     doc.setFont('helvetica', 'normal')
-    doc.setFontSize(8)
+    xPos += colWidths[1]
     
-    orden.trabajosRealizados.forEach((row, idx) => {
-      // Fondo alternado
-      if (idx % 2 === 0) {
-        doc.setFillColor(248, 250, 252)
-        doc.rect(margin, yFoneo, pageWidth - 2 * margin, 14, 'F')
-      }
-      
-      // Bordes
-      doc.setDrawColor(200, 200, 200)
-      doc.setLineWidth(0.5)
-      
-      xPos = margin
-      const rowHeight = 14
-      
-      // Área
-      doc.rect(xPos, yFoneo, colWidths[0], rowHeight)
-      doc.text(String(row.area || '-'), xPos + 2, yFoneo + 7, { maxWidth: colWidths[0] - 4 })
-      xPos += colWidths[0]
-      
-      // Filtros - Badge
-      doc.rect(xPos, yFoneo, colWidths[1], rowHeight)
-      const filtroColor = row.limpiezaFiltros === 'SI' ? [34, 197, 94] : [239, 68, 68]
-      doc.setFillColor(...filtroColor)
-      doc.rect(xPos + 2, yFoneo + 2, colWidths[1] - 4, rowHeight - 4, 'F')
-      doc.setTextColor(255, 255, 255)
-      doc.setFont('helvetica', 'bold')
-      doc.text(String(row.limpiezaFiltros || '-'), xPos + colWidths[1]/2 - 3, yFoneo + 7)
-      doc.setTextColor(0, 0, 0)
-      doc.setFont('helvetica', 'normal')
-      xPos += colWidths[1]
-      
-      // Condensadora - Badge
-      doc.rect(xPos, yFoneo, colWidths[2], rowHeight)
-      const condColor = row.limpiezaCondensadora === 'SI' ? [34, 197, 94] : [239, 68, 68]
-      doc.setFillColor(...condColor)
-      doc.rect(xPos + 2, yFoneo + 2, colWidths[2] - 4, rowHeight - 4, 'F')
-      doc.setTextColor(255, 255, 255)
-      doc.setFont('helvetica', 'bold')
-      doc.text(String(row.limpiezaCondensadora || '-'), xPos + colWidths[2]/2 - 3, yFoneo + 7)
-      doc.setTextColor(0, 0, 0)
-      doc.setFont('helvetica', 'normal')
-      xPos += colWidths[2]
-      
-      // Presión Gas
-      doc.rect(xPos, yFoneo, colWidths[3], rowHeight)
-      doc.text(String(row.presionGas || '-'), xPos + 2, yFoneo + 7, { maxWidth: colWidths[3] - 4 })
-      xPos += colWidths[3]
-      
-      // Evaporadora - Badge
-      doc.rect(xPos, yFoneo, colWidths[4], rowHeight)
-      const evapColor = row.limpiezaEvaporadora === 'SI' ? [34, 197, 94] : [239, 68, 68]
-      doc.setFillColor(...evapColor)
-      doc.rect(xPos + 2, yFoneo + 2, colWidths[4] - 4, rowHeight - 4, 'F')
-      doc.setTextColor(255, 255, 255)
-      doc.setFont('helvetica', 'bold')
-      doc.text(String(row.limpiezaEvaporadora || '-'), xPos + colWidths[4]/2 - 3, yFoneo + 7)
-      doc.setTextColor(0, 0, 0)
-      doc.setFont('helvetica', 'normal')
-      xPos += colWidths[4]
-      
-      // Revisión Eléctrica
-      doc.rect(xPos, yFoneo, colWidths[5], rowHeight)
-      doc.text(String(row.revisionElectrica || '-'), xPos + 2, yFoneo + 7, { maxWidth: colWidths[5] - 4, fontSize: 7 })
-      xPos += colWidths[5]
-      
-      // Observaciones
-      doc.rect(xPos, yFoneo, colWidths[6], rowHeight)
-      doc.text(String(row.observaciones || '-'), xPos + 2, yFoneo + 7, { maxWidth: colWidths[6] - 4 })
-      
-      yFoneo += rowHeight
-      
-      // Evitar overflow de página
-      if (yFoneo > 720) {
-        doc.addPage()
-        yFoneo = 40
-        // Repetir header
-        doc.setFillColor(30, 64, 175)
-        doc.setTextColor(255, 255, 255)
-        doc.setFont('helvetica', 'bold')
-        doc.setFontSize(8)
-        xPos = margin
-        colNames.forEach((name, i) => {
-          doc.rect(xPos, yFoneo, colWidths[i], 12, 'F')
-          doc.text(name, xPos + 2, yFoneo + 8, { maxWidth: colWidths[i] - 4 })
-          xPos += colWidths[i]
-        })
-        yFoneo += 12
-        doc.setTextColor(0, 0, 0)
-        doc.setFont('helvetica', 'normal')
-      }
-    })
-    
-    // Footer página foráneo
-    doc.setFillColor(248, 250, 252)
-    doc.rect(0, 770, pageWidth, 72, 'F')
-    doc.setFontSize(7.5)
-    doc.setTextColor(100, 116, 139)
+    // Condensadora - Badge
+    doc.rect(xPos, yFoneo, colWidths[2], rowHeight)
+    const condColor = row.limpiezaCondensadora === 'SI' ? [34, 197, 94] : [239, 68, 68]
+    doc.setFillColor(...condColor)
+    doc.rect(xPos + 2, yFoneo + 2, colWidths[2] - 4, rowHeight - 4, 'F')
+    doc.setTextColor(255, 255, 255)
+    doc.setFont('helvetica', 'bold')
+    doc.text(String(row.limpiezaCondensadora || '-'), xPos + colWidths[2]/2 - 3, yFoneo + 7)
+    doc.setTextColor(0, 0, 0)
     doc.setFont('helvetica', 'normal')
-    doc.text('Boulevard Belisario Domínguez #4213 L5, Fracc. La Gloria, Tuxtla Gutiérrez, Chiapas', margin, 785)
-    doc.text('Tel: 961 118 0157  •  WhatsApp: 961 333 6529', margin, 797)
-    doc.setFontSize(7)
-    doc.setTextColor(148, 163, 184)
-    const pageNum = doc.getNumberOfPages()
-    doc.text(`Página ${pageNum} de ${pageNum}`, pageWidth - margin - 60, 797)
-  }
+    xPos += colWidths[2]
+    
+    // Presión Gas
+    doc.rect(xPos, yFoneo, colWidths[3], rowHeight)
+    doc.text(String(row.presionGas || '-'), xPos + 2, yFoneo + 7, { maxWidth: colWidths[3] - 4 })
+    xPos += colWidths[3]
+    
+    // Evaporadora - Badge
+    doc.rect(xPos, yFoneo, colWidths[4], rowHeight)
+    const evapColor = row.limpiezaEvaporadora === 'SI' ? [34, 197, 94] : [239, 68, 68]
+    doc.setFillColor(...evapColor)
+    doc.rect(xPos + 2, yFoneo + 2, colWidths[4] - 4, rowHeight - 4, 'F')
+    doc.setTextColor(255, 255, 255)
+    doc.setFont('helvetica', 'bold')
+    doc.text(String(row.limpiezaEvaporadora || '-'), xPos + colWidths[4]/2 - 3, yFoneo + 7)
+    doc.setTextColor(0, 0, 0)
+    doc.setFont('helvetica', 'normal')
+    xPos += colWidths[4]
+    
+    // Revisión Eléctrica
+    doc.rect(xPos, yFoneo, colWidths[5], rowHeight)
+    doc.text(String(row.revisionElectrica || '-'), xPos + 2, yFoneo + 7, { maxWidth: colWidths[5] - 4, fontSize: 7 })
+    xPos += colWidths[5]
+    
+    // Observaciones
+    doc.rect(xPos, yFoneo, colWidths[6], rowHeight)
+    doc.text(String(row.observaciones || '-'), xPos + 2, yFoneo + 7, { maxWidth: colWidths[6] - 4 })
+    
+    yFoneo += rowHeight
+    
+    // Evitar overflow de página
+    if (yFoneo > 720) {
+      doc.addPage()
+      yFoneo = 40
+      // Repetir header
+      doc.setFillColor(0, 184, 148)
+      doc.setTextColor(255, 255, 255)
+      doc.setFont('helvetica', 'bold')
+      doc.setFontSize(8)
+      xPos = margin
+      colNames.forEach((name, i) => {
+        doc.rect(xPos, yFoneo, colWidths[i], 12, 'F')
+        doc.text(name, xPos + 2, yFoneo + 8, { maxWidth: colWidths[i] - 4 })
+        xPos += colWidths[i]
+      })
+      yFoneo += 12
+      doc.setTextColor(0, 0, 0)
+      doc.setFont('helvetica', 'normal')
+    }
+  })
+  
+  // Footer página foráneo
+  doc.setFillColor(248, 250, 252)
+  doc.rect(0, 770, pageWidth, 72, 'F')
+  doc.setFontSize(7.5)
+  doc.setTextColor(100, 116, 139)
+  doc.setFont('helvetica', 'normal')
+  doc.text('Boulevard Belisario Domínguez #4213 L5, Fracc. La Gloria, Tuxtla Gutiérrez, Chiapas', margin, 785)
+  doc.text('Tel: 961 118 0157  •  WhatsApp: 961 333 6529', margin, 797)
+  doc.setFontSize(7)
+  doc.setTextColor(148, 163, 184)
+  const pageNum = doc.getNumberOfPages()
+  doc.text(`Página 2 de 2`, pageWidth - margin - 60, 797)
 
   return doc
 }
