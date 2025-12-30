@@ -237,13 +237,7 @@ export default function ServicioForaneo() {
           <button type="submit" disabled={estadoEnvio.guardando} className="px-4 py-2 bg-sieeg text-white rounded hover:bg-blue-700 disabled:opacity-60">
             {estadoEnvio.guardando ? 'Guardando...' : 'Guardar orden de servicio'}
           </button>
-          <button
-            type="button"
-            onClick={() => navigator.clipboard?.writeText(JSON.stringify(resumen, null, 2))}
-            className="px-4 py-2 border rounded hover:bg-gray-50"
-          >
-            Copiar datos en JSON
-          </button>
+
           {estadoEnvio.folio && (
             <span className="inline-flex items-center px-3 py-2 text-sm bg-emerald-50 text-emerald-700 border border-emerald-200 rounded">
               Folio generado: {estadoEnvio.folio}
