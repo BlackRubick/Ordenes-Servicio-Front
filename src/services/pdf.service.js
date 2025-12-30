@@ -711,7 +711,7 @@ async function generateOrdenForaneoPDF(orden, doc, pageWidth, margin) {
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(8.5)
   
-  const rowHeight = 18
+  const rowHeight = 20
   
   orden.trabajosRealizados.forEach((row, idx) => {
     // Fondo alternado
@@ -729,11 +729,14 @@ async function generateOrdenForaneoPDF(orden, doc, pageWidth, margin) {
     
     xPos = margin
     
-    // ===== ÁREA =====
+    // ===== ÁREA - Con texto ajustable en múltiples líneas =====
     doc.setFont('helvetica', 'bold')
     doc.setTextColor(8, 145, 178)
-    doc.setFontSize(9)
-    doc.text(String(row.area || '-'), xPos + 4, yFoneo + 12, { maxWidth: colWidths[0] - 8 })
+    doc.setFontSize(8)  // Más pequeño para evitar encimado
+    const areaText = String(row.area || '-')
+    const lines = doc.splitTextToSize(areaText, colWidths[0] - 8)
+    const startY = lines.length > 1 ? yFoneo + 9 : yFoneo + 13
+    doc.text(lines, xPos + 4, startY)
     doc.setFont('helvetica', 'normal')
     doc.setTextColor(40, 40, 40)
     doc.setFontSize(8.5)
@@ -767,7 +770,7 @@ async function generateOrdenForaneoPDF(orden, doc, pageWidth, margin) {
     doc.setTextColor(40, 40, 40)
     doc.setFont('helvetica', 'normal')
     doc.setFontSize(9)
-    doc.text(String(row.presionGas || '-'), xPos + colWidths[3] / 2, yFoneo + 12, { align: 'center' })
+    doc.text(String(row.presionGas || '-'), xPos + colWidths[3] / 2, yFoneo + 13, { align: 'center' })
     xPos += colWidths[3]
     
     // ===== EVAPORADORA - Badge centrado =====
@@ -785,15 +788,17 @@ async function generateOrdenForaneoPDF(orden, doc, pageWidth, margin) {
     doc.setTextColor(...elecColor)
     doc.setFont('helvetica', elecValue !== '-' ? 'bold' : 'normal')
     doc.setFontSize(8.5)
-    doc.text(elecValue, xPos + colWidths[5] / 2, yFoneo + 12, { align: 'center' })
+    doc.text(elecValue, xPos + colWidths[5] / 2, yFoneo + 13, { align: 'center' })
     xPos += colWidths[5]
     
     // ===== OBSERVACIONES =====
     const obsValue = String(row.observaciones || '-')
     doc.setTextColor(obsValue !== '-' ? 60 : 180, obsValue !== '-' ? 60 : 180, obsValue !== '-' ? 60 : 180)
     doc.setFont('helvetica', obsValue !== '-' ? 'italic' : 'normal')
-    doc.setFontSize(8)
-    doc.text(obsValue, xPos + 4, yFoneo + 12, { maxWidth: colWidths[6] - 8 })
+    doc.setFontSize(7.5)
+    const obsLines = doc.splitTextToSize(obsValue, colWidths[6] - 8)
+    const obsY = obsLines.length > 1 ? yFoneo + 9 : yFoneo + 13
+    doc.text(obsLines, xPos + 4, obsY)
     
     // Reset estilos
     doc.setTextColor(40, 40, 40)
